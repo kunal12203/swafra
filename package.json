@@ -1,10 +1,10 @@
 {
   "name": "swafra",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for scimap knowledge graphs — Leiden-chunked, graph-linked semantic memory for Claude AI and ChatGPT",
   "type": "module",
   "bin": {
-    "swafra": "./dist/index.js"
+    "swafra": "dist/index.js"
   },
   "main": "./dist/index.js",
   "scripts": {
@@ -36,5 +36,10 @@
     "claude",
     "chatgpt"
   ],
+  "author": "kunal12203",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kunal12203/swafra.git"
+  },
   "license": "MIT"
 }
