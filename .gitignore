@@ -1,3 +1,6 @@
 node_modules/
 *.log
 .env
+bench/data/
+bench/LongMemEval/
+engine/__pycache__/
