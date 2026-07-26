@@ -69,7 +69,7 @@ def evaluate_question(item, k=10):
 
     ingest_sessions(item["haystack_sessions"], item["haystack_session_ids"], item.get("haystack_dates"))
 
-    results = get_context(item["question"], k=k, hops=1)
+    results = get_context(item["question"], k=k, hops=1, min_source_pct=0.25)
     retrieved_sids = [r.get("source_title", "") for r in results if r.get("source_title")]
     metrics = recall_at_k(retrieved_sids, item["answer_session_ids"])
 
