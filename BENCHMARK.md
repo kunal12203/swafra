@@ -39,7 +39,7 @@
 
 ### Option 1 — Google Colab (easiest, no setup)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kunal12203/swafra/blob/main/packages/mcp/bench/longmemeval_colab.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/kunal12203/swafra/blob/master/packages/mcp/bench/longmemeval_colab.ipynb)
 
 Click the badge, run all cells. Downloads the dataset automatically and runs the eval in your browser. Takes ~4 min for 50 questions, ~30 min for the full 500.
 
