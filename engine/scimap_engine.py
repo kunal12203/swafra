@@ -13,6 +13,7 @@ import math
 import os
 import re
 import sys
+import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -444,6 +445,11 @@ def leiden_chunk(text: str) -> list[dict]:
         import leidenalg
         import numpy as np
     except ImportError:
+        log.warning(
+            "Leiden unavailable — igraph/leidenalg not installed. "
+            "Falling back to conversation chunking. "
+            "For Leiden: pip install igraph leidenalg numpy (requires Python 3.10-3.12)"
+        )
         return []  # Signal that Leiden is unavailable
 
     sentences = _SENT_RE.split(text.strip())
@@ -557,6 +563,8 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
             "preferences": piece.get("preferences", []),
             "type": piece.get("type", "unknown"),
             "span": piece["span"],
+            "created_at": time.time(),
+            "superseded_by": None,
         })
 
     # Build edges
@@ -589,6 +597,51 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
                 for j in range(i + 1, len(cids)):
                     new_edges.append({"source_id": source_id, "from": cids[i], "to": cids[j], "type": "entity", "weight": 0.6})
 
+    # Phase 3: superseded_by — mark old chunks from same source that are near-duplicates
+    # If a new chunk shares 3+ entities with an old chunk and cosine sim > 0.85, old is superseded
+    old_chunks = [c for c in chunks_store if c.get("source_id") == source_id and c["id"] not in chunk_ids]
+    for new_chunk, new_vec in zip(chunk_ids, vectors):
+        new_entities = set(pieces[chunk_ids.index(new_chunk)].get("entities", []))
+        if len(new_entities) < 3:
+            continue
+        for old_c in old_chunks:
+            if old_c.get("superseded_by"):
+                continue
+            old_entities = set(old_c.get("entities", []))
+            if len(new_entities & old_entities) >= 3:
+                sim = cosine_sim(new_vec, old_c["embedding"])
+                if sim >= 0.85:
+                    old_c["superseded_by"] = new_chunk
+
+    # Phase 2: cross-session similarity edges — link new chunks to best chunk from other sources
+    other_chunks = [c for c in chunks_store if c.get("source_id") != source_id and not c.get("superseded_by")]
+    if other_chunks:
+        # Group other chunks by source, take best scored per source for efficiency
+        other_by_source: dict[str, list] = defaultdict(list)
+        for c in other_chunks:
+            other_by_source[c["source_id"]].append(c)
+
+        for new_idx, (new_cid, new_vec) in enumerate(zip(chunk_ids, vectors)):
+            cross_edges_added = 0
+            candidates = []
+            for src_id, src_chunks in other_by_source.items():
+                # Best chunk from this source by cosine sim to new chunk
+                best = max(src_chunks, key=lambda c: cosine_sim(new_vec, c["embedding"]))
+                sim = cosine_sim(new_vec, best["embedding"])
+                if sim >= 0.45:
+                    candidates.append((sim, best))
+            # Add top-3 cross-session edges per new chunk
+            candidates.sort(key=lambda x: x[0], reverse=True)
+            for sim, other_c in candidates[:3]:
+                new_edges.append({
+                    "source_id": None,  # not scoped to one source — survives source deletion
+                    "from": new_cid,
+                    "to": other_c["id"],
+                    "type": "cross_session",
+                    "weight": round(sim, 4),
+                })
+                cross_edges_added += 1
+
     edges_store.extend(new_edges)
     sources_store = [s for s in sources_store if s["id"] != source_id]
     sources_store.append({"id": source_id, "title": source_title, "chunks": len(pieces)})
@@ -601,8 +654,13 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
 
 
 def search_knowledge(query: str, k: int = 8) -> list[dict]:
-    """Hybrid search: BM25 + vector + entity/date matching."""
+    """Hybrid search: BM25 + vector + entity/date matching + recency decay."""
     chunks_store = _load_json(_CHUNKS_FILE) or []
+    if not chunks_store:
+        return []
+
+    # Filter out superseded chunks (replaced by newer content)
+    chunks_store = [c for c in chunks_store if not c.get("superseded_by")]
     if not chunks_store:
         return []
 
@@ -691,13 +749,22 @@ def search_knowledge(query: str, k: int = 8) -> list[dict]:
     max_vec = max(vec_scores.values()) if vec_scores else 1.0
     max_ngram = max(ngram_scores.values()) if ngram_scores else 1.0
 
+    now = time.time()
     fused = {}
     for i in range(len(chunks_store)):
         bm25_norm = bm25_scores.get(i, 0) / max(max_bm25, 0.001)
         vec_norm = vec_scores.get(i, 0) / max(max_vec, 0.001)
         ent_score = entity_scores.get(i, 0)
         ngram_norm = ngram_scores.get(i, 0) / max(max_ngram, 0.001)
-        fused[i] = 0.4 * bm25_norm + 0.15 * vec_norm + 0.25 * ent_score + 0.2 * ngram_norm
+        base = 0.4 * bm25_norm + 0.15 * vec_norm + 0.25 * ent_score + 0.2 * ngram_norm
+        # Recency decay: half-life ~140 days (lambda=0.005/day). Only applies if created_at present.
+        created_at = chunks_store[i].get("created_at")
+        if created_at:
+            days_old = (now - created_at) / 86400
+            decay = math.exp(-0.005 * days_old)
+        else:
+            decay = 1.0
+        fused[i] = base * decay
 
     # Sort and return top-k
     ranked = sorted(fused.items(), key=lambda x: x[1], reverse=True)
@@ -766,7 +833,7 @@ def graph_walk(chunk_id: str, hops: int = 2, k: int = 10) -> list[dict]:
     return results[:k]
 
 
-def get_context(query: str, k: int = 5, hops: int = 1, min_source_pct: float = 0.75) -> list[dict]:
+def get_context(query: str, k: int = 5, hops: int = 1, min_source_pct: float = 0.15) -> list[dict]:
     """Combined search + graph walk. Returns best chunk per source until coverage target met.
 
     Retrieves all scored chunks, then picks best chunk from each source (session).
