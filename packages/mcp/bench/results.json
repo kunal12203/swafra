@@ -1,0 +1,1877 @@
+{
+  "config": {
+    "n": 50,
+    "k": 10,
+    "data": "longmemeval_s_cleaned.json",
+    "backend": "local",
+    "metric": "session-level recall (official LongMemEval)"
+  },
+  "summary": {
+    "evaluated": 50,
+    "skipped_abstention": 0,
+    "recall_any": 1.0,
+    "recall_all": 1.0,
+    "recall_fraction": 1.0,
+    "elapsed_s": 212.15503883361816
+  },
+  "by_type": {
+    "single-session-user": {
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "count": 50
+    }
+  },
+  "details": [
+    {
+      "question_id": "e47becba",
+      "question_type": "single-session-user",
+      "question": "What degree did I graduate with?",
+      "answer": "Business Administration",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 583.1,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 53,
+      "retrieved_sessions": [
+        "answer_280352e9",
+        "02bd2b90_3",
+        "ec6ca9ef",
+        "d414cac5_4",
+        "7045db85_1",
+        "52c34859_1",
+        "d94b721b",
+        "sharegpt_QZMeA7V_17",
+        "ultrachat_45576",
+        "f6859b48_2"
+      ],
+      "answer_sessions": [
+        "answer_280352e9"
+      ],
+      "hits": [
+        "answer_280352e9"
+      ],
+      "missed": [],
+      "top_score": 0.6507
+    },
+    {
+      "question_id": "118b2229",
+      "question_type": "single-session-user",
+      "question": "How long is my daily commute to work?",
+      "answer": "45 minutes each way",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 715.3,
+      "leiden_chunks": 0,
+      "total_chunks": 33,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 33,
+      "num_sessions_ingested": 45,
+      "retrieved_sessions": [
+        "answer_40a90d51",
+        "ultrachat_392094",
+        "db73b7e4_4",
+        "5dce60dd",
+        "db50c0f6",
+        "afe04238_1",
+        "7d8b5834_1",
+        "ultrachat_246088",
+        "5209e813_2",
+        "ultrachat_498215"
+      ],
+      "answer_sessions": [
+        "answer_40a90d51"
+      ],
+      "hits": [
+        "answer_40a90d51"
+      ],
+      "missed": [],
+      "top_score": 0.6877
+    },
+    {
+      "question_id": "51a45a95",
+      "question_type": "single-session-user",
+      "question": "Where did I redeem a $5 coupon on coffee creamer?",
+      "answer": "Target",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 664.2,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_d61669c7",
+        "98c198fb",
+        "6e0b1800_2",
+        "5c44d9fe_1",
+        "07ba9acd_2",
+        "217debf7",
+        "747abd56_2",
+        "55e0c6db_2",
+        "dfe646a7_1",
+        "07d1915d_1"
+      ],
+      "answer_sessions": [
+        "answer_d61669c7"
+      ],
+      "hits": [
+        "answer_d61669c7"
+      ],
+      "missed": [],
+      "top_score": 0.7756
+    },
+    {
+      "question_id": "58bf7951",
+      "question_type": "single-session-user",
+      "question": "What play did I attend at the local community theater?",
+      "answer": "The Glass Menagerie",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 0.333,
+      "avg_chunk_words": 588.1,
+      "leiden_chunks": 0,
+      "total_chunks": 42,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 42,
+      "num_sessions_ingested": 57,
+      "retrieved_sessions": [
+        "answer_355c48bb",
+        "sharegpt_DGiqvVv_270",
+        "ultrachat_304942",
+        "ultrachat_366731",
+        "ultrachat_268434",
+        "793382f9_2",
+        "1587bd78_1",
+        "5b83c26e_1",
+        "sharegpt_CvVLg2J_18",
+        "sharegpt_M84blrA_53"
+      ],
+      "answer_sessions": [
+        "answer_355c48bb"
+      ],
+      "hits": [
+        "answer_355c48bb"
+      ],
+      "missed": [],
+      "top_score": 0.7675
+    },
+    {
+      "question_id": "1e043500",
+      "question_type": "single-session-user",
+      "question": "What is the name of the playlist I created on Spotify?",
+      "answer": "Summer Vibes",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 631.4,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_3e012175",
+        "01bd9def",
+        "sharegpt_bph7DTk_7",
+        "7b1d1f43_1",
+        "sharegpt_6QUDIXG_24",
+        "8020d945_2",
+        "ultrachat_271928",
+        "ultrachat_266656",
+        "b28990c8_1",
+        "4d0d7984"
+      ],
+      "answer_sessions": [
+        "answer_3e012175"
+      ],
+      "hits": [
+        "answer_3e012175"
+      ],
+      "missed": [],
+      "top_score": 0.7838
+    },
+    {
+      "question_id": "c5e8278d",
+      "question_type": "single-session-user",
+      "question": "What was my last name before I changed it?",
+      "answer": "Johnson",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 706.0,
+      "leiden_chunks": 0,
+      "total_chunks": 33,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 33,
+      "num_sessions_ingested": 44,
+      "retrieved_sessions": [
+        "answer_f6168136",
+        "aaf71ce2_2",
+        "89b1028d_1",
+        "bdf735de_2",
+        "f58317c6",
+        "861ed841_1",
+        "fc6549b2",
+        "64767b7f",
+        "sharegpt_WPGrlAK_0",
+        "193c23bd_2"
+      ],
+      "answer_sessions": [
+        "answer_f6168136"
+      ],
+      "hits": [
+        "answer_f6168136"
+      ],
+      "missed": [],
+      "top_score": 0.7706
+    },
+    {
+      "question_id": "6ade9755",
+      "question_type": "single-session-user",
+      "question": "Where do I take yoga classes?",
+      "answer": "Serenity Yoga",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 631.8,
+      "leiden_chunks": 0,
+      "total_chunks": 38,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 38,
+      "num_sessions_ingested": 51,
+      "retrieved_sessions": [
+        "answer_9398da02",
+        "ec8fa65d_2",
+        "7c5ab02a_2",
+        "ultrachat_462",
+        "28621d6a_2",
+        "910ed479_3",
+        "a200b713_4",
+        "4f29941e_1",
+        "1ddc89e9_3",
+        "sharegpt_2o1zvbh_11"
+      ],
+      "answer_sessions": [
+        "answer_9398da02"
+      ],
+      "hits": [
+        "answer_9398da02"
+      ],
+      "missed": [],
+      "top_score": 0.775
+    },
+    {
+      "question_id": "6f9b354f",
+      "question_type": "single-session-user",
+      "question": "What color did I repaint my bedroom walls?",
+      "answer": "a lighter shade of gray",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 688.0,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_feb5200f",
+        "0c0f2449_2",
+        "sharegpt_IuLT3VI_9",
+        "54d06eeb",
+        "ultrachat_549317",
+        "a79f1a04_1",
+        "60207b41_1",
+        "331197d5_3",
+        "de877349",
+        "fd961e54_1"
+      ],
+      "answer_sessions": [
+        "answer_feb5200f"
+      ],
+      "hits": [
+        "answer_feb5200f"
+      ],
+      "missed": [],
+      "top_score": 0.7284
+    },
+    {
+      "question_id": "58ef2f1c",
+      "question_type": "single-session-user",
+      "question": "When did I volunteer at the local animal shelter's fundraising dinner?",
+      "answer": "February 14th",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 637.1,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_59547700",
+        "e6ab6a7b_2",
+        "13f3da23_3",
+        "e82ce7cd_1",
+        "ultrachat_5212",
+        "ultrachat_477344",
+        "ultrachat_246324",
+        "403ee298_1",
+        "b546cb39_2",
+        "dbcfab21"
+      ],
+      "answer_sessions": [
+        "answer_59547700"
+      ],
+      "hits": [
+        "answer_59547700"
+      ],
+      "missed": [],
+      "top_score": 0.8125
+    },
+    {
+      "question_id": "f8c5f88b",
+      "question_type": "single-session-user",
+      "question": "Where did I buy my new tennis racket from?",
+      "answer": "the sports store downtown",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 720.2,
+      "leiden_chunks": 0,
+      "total_chunks": 34,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 34,
+      "num_sessions_ingested": 46,
+      "retrieved_sessions": [
+        "answer_c3567066",
+        "91880423",
+        "sharegpt_TKj3yO8_0",
+        "68ace657_1",
+        "15232887_1",
+        "54e9197a",
+        "84a93262",
+        "eccc6e84_2",
+        "ultrachat_94045",
+        "66c23110_1"
+      ],
+      "answer_sessions": [
+        "answer_c3567066"
+      ],
+      "hits": [
+        "answer_c3567066"
+      ],
+      "missed": [],
+      "top_score": 0.775
+    },
+    {
+      "question_id": "5d3d2817",
+      "question_type": "single-session-user",
+      "question": "What was my previous occupation?",
+      "answer": "Marketing specialist at a small startup",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 701.4,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 53,
+      "retrieved_sessions": [
+        "sharegpt_ipLglky_48",
+        "answer_235eb6fb",
+        "670ca40e",
+        "sharegpt_8zsFRKh_0",
+        "e93efd9a_1",
+        "59f7fff7_1",
+        "ultrachat_106114",
+        "49b78a55_1",
+        "ultrachat_384575",
+        "dae7d519"
+      ],
+      "answer_sessions": [
+        "answer_235eb6fb"
+      ],
+      "hits": [
+        "answer_235eb6fb"
+      ],
+      "missed": [],
+      "top_score": 0.6585
+    },
+    {
+      "question_id": "7527f7e2",
+      "question_type": "single-session-user",
+      "question": "How much did I spend on a designer handbag?",
+      "answer": "$800",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 714.9,
+      "leiden_chunks": 0,
+      "total_chunks": 33,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 33,
+      "num_sessions_ingested": 45,
+      "retrieved_sessions": [
+        "answer_7cb94507",
+        "44bbd8cd_2",
+        "sharegpt_cRrfdsc_0",
+        "d81d9846",
+        "864a563d_3",
+        "7712aded",
+        "1cafd864_3",
+        "c7c4cf1e_2",
+        "ultrachat_18859",
+        "ultrachat_136979"
+      ],
+      "answer_sessions": [
+        "answer_7cb94507"
+      ],
+      "hits": [
+        "answer_7cb94507"
+      ],
+      "missed": [],
+      "top_score": 0.7516
+    },
+    {
+      "question_id": "c960da58",
+      "question_type": "single-session-user",
+      "question": "How many playlists do I have on Spotify?",
+      "answer": "20",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 730.0,
+      "leiden_chunks": 0,
+      "total_chunks": 34,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 34,
+      "num_sessions_ingested": 46,
+      "retrieved_sessions": [
+        "answer_e05e4612",
+        "89d3053f",
+        "fb5dd87f_1",
+        "b76006cb_3",
+        "5edfe253_2",
+        "ultrachat_109577",
+        "705b5399_3",
+        "f7ffddbc",
+        "ultrachat_36718",
+        "f01feb31"
+      ],
+      "answer_sessions": [
+        "answer_e05e4612"
+      ],
+      "hits": [
+        "answer_e05e4612"
+      ],
+      "missed": [],
+      "top_score": 0.8475
+    },
+    {
+      "question_id": "3b6f954b",
+      "question_type": "single-session-user",
+      "question": "Where did I attend for my study abroad program?",
+      "answer": "University of Melbourne in Australia",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 656.2,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_94030872",
+        "6d3f5c68_4",
+        "ultrachat_294369",
+        "c271c071",
+        "c566edbb_3",
+        "f5f4b6f6_2",
+        "ultrachat_466603",
+        "sharegpt_kpnwrGe_12",
+        "ultrachat_572251",
+        "ultrachat_64326"
+      ],
+      "answer_sessions": [
+        "answer_94030872"
+      ],
+      "hits": [
+        "answer_94030872"
+      ],
+      "missed": [],
+      "top_score": 0.7782
+    },
+    {
+      "question_id": "726462e0",
+      "question_type": "single-session-user",
+      "question": "What was the discount I got on my first purchase from the new clothing brand?",
+      "answer": "10%",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 707.9,
+      "leiden_chunks": 0,
+      "total_chunks": 36,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 36,
+      "num_sessions_ingested": 48,
+      "retrieved_sessions": [
+        "6ef99651_2",
+        "answer_f38f679b",
+        "082889ba_1",
+        "9c05acfe_2",
+        "ce144f08",
+        "5b83c26e_1",
+        "7e4dab66_1",
+        "cdd9704d_1",
+        "29e76903_1",
+        "741c6781_1"
+      ],
+      "answer_sessions": [
+        "answer_f38f679b"
+      ],
+      "hits": [
+        "answer_f38f679b"
+      ],
+      "missed": [],
+      "top_score": 0.7211
+    },
+    {
+      "question_id": "94f70d80",
+      "question_type": "single-session-user",
+      "question": "How long did it take me to assemble the IKEA bookshelf?",
+      "answer": "4 hours",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 677.5,
+      "leiden_chunks": 0,
+      "total_chunks": 36,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 36,
+      "num_sessions_ingested": 49,
+      "retrieved_sessions": [
+        "answer_c63c0458",
+        "ultrachat_172828",
+        "67045503",
+        "sharegpt_6fTnCnw_76",
+        "708e39b6_2",
+        "sharegpt_PCqCVmR_18",
+        "ultrachat_476942",
+        "sharegpt_WQr7EZT_0",
+        "34deeb0c_2",
+        "b015c3c3_1"
+      ],
+      "answer_sessions": [
+        "answer_c63c0458"
+      ],
+      "hits": [
+        "answer_c63c0458"
+      ],
+      "missed": [],
+      "top_score": 0.8
+    },
+    {
+      "question_id": "66f24dbb",
+      "question_type": "single-session-user",
+      "question": "What did I buy for my sister's birthday gift?",
+      "answer": "a yellow dress",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 646.0,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_fea2e4d3",
+        "89452526_2",
+        "798e4ba3_2",
+        "21c6c41d",
+        "ca3a4e4f_1",
+        "76299a49_1",
+        "8d46b8fa_1",
+        "3fa35683_7",
+        "2d90fb95",
+        "2a7e0197"
+      ],
+      "answer_sessions": [
+        "answer_fea2e4d3"
+      ],
+      "hits": [
+        "answer_fea2e4d3"
+      ],
+      "missed": [],
+      "top_score": 0.7713
+    },
+    {
+      "question_id": "ad7109d1",
+      "question_type": "single-session-user",
+      "question": "What speed is my new internet plan?",
+      "answer": "500 Mbps",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 671.4,
+      "leiden_chunks": 0,
+      "total_chunks": 33,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 33,
+      "num_sessions_ingested": 44,
+      "retrieved_sessions": [
+        "answer_679840f8",
+        "1d6744b5_1",
+        "3dc02d26_2",
+        "22aa7cca_3",
+        "495cf518_1",
+        "3030efec_2",
+        "d92cc997",
+        "02f0738e_4",
+        "sharegpt_Ck9R9HX_0",
+        "0982a1fa_5"
+      ],
+      "answer_sessions": [
+        "answer_679840f8"
+      ],
+      "hits": [
+        "answer_679840f8"
+      ],
+      "missed": [],
+      "top_score": 0.6912
+    },
+    {
+      "question_id": "af8d2e46",
+      "question_type": "single-session-user",
+      "question": "How many shirts did I pack for my 5-day trip to Costa Rica?",
+      "answer": "7",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 700.6,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_82a04f59",
+        "33c3b457",
+        "32a67b35",
+        "4ebc182b",
+        "73d5f10c",
+        "13047a02",
+        "38e4b795_2",
+        "ultrachat_328044",
+        "82a89303",
+        "ultrachat_284576"
+      ],
+      "answer_sessions": [
+        "answer_82a04f59"
+      ],
+      "hits": [
+        "answer_82a04f59"
+      ],
+      "missed": [],
+      "top_score": 0.8771
+    },
+    {
+      "question_id": "dccbc061",
+      "question_type": "single-session-user",
+      "question": "What was my previous stance on spirituality?",
+      "answer": "A staunch atheist",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 616.4,
+      "leiden_chunks": 0,
+      "total_chunks": 36,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 36,
+      "num_sessions_ingested": 49,
+      "retrieved_sessions": [
+        "answer_8f276838",
+        "0f417163",
+        "4af27eab_2",
+        "ultrachat_243849",
+        "c3cd646c_2",
+        "sharegpt_MKMWjX0_25",
+        "959e6cb0_3",
+        "ultrachat_278202",
+        "b2a885b9",
+        "8d74c5f6"
+      ],
+      "answer_sessions": [
+        "answer_8f276838"
+      ],
+      "hits": [
+        "answer_8f276838"
+      ],
+      "missed": [],
+      "top_score": 0.775
+    },
+    {
+      "question_id": "c8c3f81d",
+      "question_type": "single-session-user",
+      "question": "What brand are my favorite running shoes?",
+      "answer": "Nike",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 713.4,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 52,
+      "retrieved_sessions": [
+        "answer_761acef8",
+        "19ec83c5_1",
+        "66e94928",
+        "05be3ff0_4",
+        "eb5d5a93_1",
+        "2b16f3d6_1",
+        "e89b6be2_2",
+        "9c5f1314_1",
+        "998616b4_4",
+        "eb403c80_2"
+      ],
+      "answer_sessions": [
+        "answer_761acef8"
+      ],
+      "hits": [
+        "answer_761acef8"
+      ],
+      "missed": [],
+      "top_score": 0.8069
+    },
+    {
+      "question_id": "8ebdbe50",
+      "question_type": "single-session-user",
+      "question": "What certification did I complete last month?",
+      "answer": "Data Science",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 688.7,
+      "leiden_chunks": 0,
+      "total_chunks": 36,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 36,
+      "num_sessions_ingested": 48,
+      "retrieved_sessions": [
+        "answer_8ad8a34f",
+        "b53f447a_1",
+        "27d378b2_3",
+        "03b4d5d8_2",
+        "d4f7a065_2",
+        "94e2773e",
+        "01e806f0_1",
+        "90f16f14_2",
+        "d87ea945",
+        "66369fde_4"
+      ],
+      "answer_sessions": [
+        "answer_8ad8a34f"
+      ],
+      "hits": [
+        "answer_8ad8a34f"
+      ],
+      "missed": [],
+      "top_score": 0.7801
+    },
+    {
+      "question_id": "6b168ec8",
+      "question_type": "single-session-user",
+      "question": "How many bikes do I own?",
+      "answer": "three",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 724.8,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_e623ae87",
+        "afffd8ec_3",
+        "ultrachat_360618",
+        "0232f77d",
+        "33dff20c_3",
+        "ultrachat_489527",
+        "ultrachat_377741",
+        "ultrachat_414934",
+        "258645ba_1",
+        "ultrachat_353985"
+      ],
+      "answer_sessions": [
+        "answer_e623ae87"
+      ],
+      "hits": [
+        "answer_e623ae87"
+      ],
+      "missed": [],
+      "top_score": 0.6885
+    },
+    {
+      "question_id": "75499fd8",
+      "question_type": "single-session-user",
+      "question": "What breed is my dog?",
+      "answer": "Golden Retriever",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 0.5,
+      "avg_chunk_words": 626.6,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 52,
+      "retrieved_sessions": [
+        "answer_723bf11f",
+        "3b028282",
+        "533372c8_3",
+        "ultrachat_96299",
+        "sharegpt_XlNs8Lz_111",
+        "sharegpt_PUZlqBP_0",
+        "168feef7_1",
+        "ultrachat_189069",
+        "18b0d357_1",
+        "eb0d8dc1_7"
+      ],
+      "answer_sessions": [
+        "answer_723bf11f"
+      ],
+      "hits": [
+        "answer_723bf11f"
+      ],
+      "missed": [],
+      "top_score": 0.6686
+    },
+    {
+      "question_id": "21436231",
+      "question_type": "single-session-user",
+      "question": "How many largemouth bass did I catch on my fishing trip to Lake Michigan?",
+      "answer": "12",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 688.4,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_1e6d4567",
+        "0d0a89dc_1",
+        "7a7a4bf0_4",
+        "dc378711_1",
+        "d0785ee9_1",
+        "3fa35683_6",
+        "6bd0b406_1",
+        "a3118ef0_1",
+        "sharegpt_wrwD6bG_0",
+        "3197d998_6"
+      ],
+      "answer_sessions": [
+        "answer_1e6d4567"
+      ],
+      "hits": [
+        "answer_1e6d4567"
+      ],
+      "missed": [],
+      "top_score": 0.9
+    },
+    {
+      "question_id": "95bcc1c8",
+      "question_type": "single-session-user",
+      "question": "How many amateur comedians did I watch perform at the open mic night?",
+      "answer": "10",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 696.2,
+      "leiden_chunks": 0,
+      "total_chunks": 34,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 34,
+      "num_sessions_ingested": 46,
+      "retrieved_sessions": [
+        "answer_cb742a61",
+        "bff03174",
+        "c9763bff",
+        "99e5e380",
+        "396238f9",
+        "e201572a",
+        "abeda028",
+        "3329e5e8_1",
+        "f64c4793_2",
+        "d59a335d"
+      ],
+      "answer_sessions": [
+        "answer_cb742a61"
+      ],
+      "hits": [
+        "answer_cb742a61"
+      ],
+      "missed": [],
+      "top_score": 0.744
+    },
+    {
+      "question_id": "0862e8bf",
+      "question_type": "single-session-user",
+      "question": "What is the name of my cat?",
+      "answer": "Luna",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 621.3,
+      "leiden_chunks": 0,
+      "total_chunks": 37,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 37,
+      "num_sessions_ingested": 50,
+      "retrieved_sessions": [
+        "answer_c6fd8ebd",
+        "sharegpt_2I1TxKW_0",
+        "0566c21b",
+        "2442d5b9",
+        "sharegpt_3BkB8g5_0",
+        "ultrachat_102040",
+        "sharegpt_A7KJApk_21",
+        "6c172949_1",
+        "ultrachat_47999",
+        "sharegpt_WhKs0Le_0"
+      ],
+      "answer_sessions": [
+        "answer_c6fd8ebd"
+      ],
+      "hits": [
+        "answer_c6fd8ebd"
+      ],
+      "missed": [],
+      "top_score": 0.6986
+    },
+    {
+      "question_id": "853b0a1d",
+      "question_type": "single-session-user",
+      "question": "How old was I when my grandma gave me the silver necklace?",
+      "answer": "18",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 639.0,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 52,
+      "retrieved_sessions": [
+        "answer_69811d4a",
+        "c70f9f9c",
+        "ebb5bc7c_2",
+        "sharegpt_n3MgsgL_0",
+        "66a6a097_2",
+        "3fa35683_3",
+        "f71bf532_1",
+        "a8b4bfb3_2",
+        "sharegpt_B7mSlfQ_55",
+        "451120d3_2"
+      ],
+      "answer_sessions": [
+        "answer_69811d4a"
+      ],
+      "hits": [
+        "answer_69811d4a"
+      ],
+      "missed": [],
+      "top_score": 0.7922
+    },
+    {
+      "question_id": "a06e4cfe",
+      "question_type": "single-session-user",
+      "question": "What is my preferred gin-to-vermouth ratio for a classic gin martini?",
+      "answer": "3:1",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 629.9,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 53,
+      "retrieved_sessions": [
+        "answer_6fe9fb49",
+        "84fb50bb_3",
+        "fc004ede_1",
+        "02f9bedb_2",
+        "8dd2d3cc",
+        "0c891c0b_1",
+        "9de2c795",
+        "b66c6397_1",
+        "4d2c2c88_1",
+        "ultrachat_93574"
+      ],
+      "answer_sessions": [
+        "answer_6fe9fb49"
+      ],
+      "hits": [
+        "answer_6fe9fb49"
+      ],
+      "missed": [],
+      "top_score": 0.7929
+    },
+    {
+      "question_id": "37d43f65",
+      "question_type": "single-session-user",
+      "question": "How much RAM did I upgrade my laptop to?",
+      "answer": "16GB",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 641.4,
+      "leiden_chunks": 0,
+      "total_chunks": 36,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 36,
+      "num_sessions_ingested": 49,
+      "retrieved_sessions": [
+        "answer_55161935",
+        "3dcf1e0b_2",
+        "ffe473f3_1",
+        "ultrachat_488025",
+        "ultrachat_170146",
+        "ultrachat_521127",
+        "1a44346c_2",
+        "1cafd864_3",
+        "ultrachat_370801",
+        "ultrachat_10500"
+      ],
+      "answer_sessions": [
+        "answer_55161935"
+      ],
+      "hits": [
+        "answer_55161935"
+      ],
+      "missed": [],
+      "top_score": 0.775
+    },
+    {
+      "question_id": "b86304ba",
+      "question_type": "single-session-user",
+      "question": "How much is the painting of a sunset worth in terms of the amount I paid for it?",
+      "answer": "The painting is worth triple what I paid for it.",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 906.5,
+      "leiden_chunks": 0,
+      "total_chunks": 30,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 30,
+      "num_sessions_ingested": 41,
+      "retrieved_sessions": [
+        "answer_645b0329",
+        "ultrachat_328696",
+        "ea8bb4f8_2",
+        "fe1e4351_1",
+        "sharegpt_xGoJZ6Z_0",
+        "ultrachat_222869",
+        "1c8832b4_2",
+        "8e9425ef_1",
+        "3b73120a_1",
+        "ae00973d_4"
+      ],
+      "answer_sessions": [
+        "answer_645b0329"
+      ],
+      "hits": [
+        "answer_645b0329"
+      ],
+      "missed": [],
+      "top_score": 0.7229
+    },
+    {
+      "question_id": "d52b4f67",
+      "question_type": "single-session-user",
+      "question": "Where did I attend my cousin's wedding?",
+      "answer": "The Grand Ballroom",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 681.8,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 52,
+      "retrieved_sessions": [
+        "answer_0df6aa4b",
+        "da1797c4_1",
+        "d31c3ec8_3",
+        "29545df8_1",
+        "ultrachat_127631",
+        "f999b05b_5",
+        "c578da1f_1",
+        "sharegpt_BVfC7JV_0",
+        "cd1f21d0_3",
+        "62a6d083"
+      ],
+      "answer_sessions": [
+        "answer_0df6aa4b"
+      ],
+      "hits": [
+        "answer_0df6aa4b"
+      ],
+      "missed": [],
+      "top_score": 0.7664
+    },
+    {
+      "question_id": "25e5aa4f",
+      "question_type": "single-session-user",
+      "question": "Where did I complete my Bachelor's degree in Computer Science?",
+      "answer": "University of California, Los Angeles (UCLA)",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 0.6,
+      "avg_chunk_words": 658.7,
+      "leiden_chunks": 0,
+      "total_chunks": 33,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 33,
+      "num_sessions_ingested": 45,
+      "retrieved_sessions": [
+        "answer_986de8c3",
+        "18807892_4",
+        "a459d477",
+        "8953c8c8_1",
+        "ultrachat_381447",
+        "91e581ad_1",
+        "d750b298_1",
+        "48f804a3",
+        "13ad258b",
+        "c388319c_1"
+      ],
+      "answer_sessions": [
+        "answer_986de8c3"
+      ],
+      "hits": [
+        "answer_986de8c3"
+      ],
+      "missed": [],
+      "top_score": 0.814
+    },
+    {
+      "question_id": "caf9ead2",
+      "question_type": "single-session-user",
+      "question": "How long did it take to move to the new apartment?",
+      "answer": "5 hours",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 734.0,
+      "leiden_chunks": 0,
+      "total_chunks": 32,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 32,
+      "num_sessions_ingested": 43,
+      "retrieved_sessions": [
+        "answer_0714183a",
+        "6f9e197b_2",
+        "f684ac4c_2",
+        "ultrachat_495546",
+        "ca5f0505",
+        "cd568521_2",
+        "9f8bdd23_1",
+        "ultrachat_30245",
+        "d2907bd6",
+        "44713827_2"
+      ],
+      "answer_sessions": [
+        "answer_0714183a"
+      ],
+      "hits": [
+        "answer_0714183a"
+      ],
+      "missed": [],
+      "top_score": 0.8
+    },
+    {
+      "question_id": "8550ddae",
+      "question_type": "single-session-user",
+      "question": "What type of cocktail recipe did I try last weekend?",
+      "answer": "lavender gin fizz",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 745.3,
+      "leiden_chunks": 0,
+      "total_chunks": 31,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 31,
+      "num_sessions_ingested": 42,
+      "retrieved_sessions": [
+        "answer_c8354ae9",
+        "71cf5aeb_3",
+        "8ec23b2c",
+        "a7189b75",
+        "c7a15bdc",
+        "9deebbc2_2",
+        "3b13915f",
+        "e10dfffb_1",
+        "ultrachat_365941",
+        "4f234e2c"
+      ],
+      "answer_sessions": [
+        "answer_c8354ae9"
+      ],
+      "hits": [
+        "answer_c8354ae9"
+      ],
+      "missed": [],
+      "top_score": 0.7948
+    },
+    {
+      "question_id": "60d45044",
+      "question_type": "single-session-user",
+      "question": "What type of rice is my favorite?",
+      "answer": "Japanese short-grain rice",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 648.4,
+      "leiden_chunks": 0,
+      "total_chunks": 38,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 38,
+      "num_sessions_ingested": 51,
+      "retrieved_sessions": [
+        "answer_9cddca88",
+        "fcc6d66d_1",
+        "26bc645b_5",
+        "446173bb_1",
+        "025c9e24_1",
+        "f90c44e6_2",
+        "9b1d5656_2",
+        "sharegpt_42tUQ8S_0",
+        "795a13a7",
+        "4ebf9095_1"
+      ],
+      "answer_sessions": [
+        "answer_9cddca88"
+      ],
+      "hits": [
+        "answer_9cddca88"
+      ],
+      "missed": [],
+      "top_score": 0.9595
+    },
+    {
+      "question_id": "3f1e9474",
+      "question_type": "single-session-user",
+      "question": "Who did I have a conversation with about destiny?",
+      "answer": "Sarah",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 636.9,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 52,
+      "retrieved_sessions": [
+        "answer_57fc1954",
+        "205f348b_2",
+        "097cefd0_1",
+        "sharegpt_cM3OvaA_0",
+        "4f23a396_1",
+        "d771ea6d_2",
+        "3aac691d_2",
+        "sharegpt_wWUI4SO_7",
+        "sharegpt_5clkQjb_12",
+        "ultrachat_477598"
+      ],
+      "answer_sessions": [
+        "answer_57fc1954"
+      ],
+      "hits": [
+        "answer_57fc1954"
+      ],
+      "missed": [],
+      "top_score": 0.7464
+    },
+    {
+      "question_id": "86b68151",
+      "question_type": "single-session-user",
+      "question": "Where did I buy my new bookshelf from?",
+      "answer": "IKEA",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 729.4,
+      "leiden_chunks": 0,
+      "total_chunks": 35,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 35,
+      "num_sessions_ingested": 47,
+      "retrieved_sessions": [
+        "answer_dc11c1eb",
+        "4e671700",
+        "0abaca24_1",
+        "sharegpt_beV15ZO_0",
+        "3d72c0c0",
+        "d8454317_4",
+        "ultrachat_182718",
+        "784ed4a9_1",
+        "sharegpt_rnL5VQO_0",
+        "ultrachat_522663"
+      ],
+      "answer_sessions": [
+        "answer_dc11c1eb"
+      ],
+      "hits": [
+        "answer_dc11c1eb"
+      ],
+      "missed": [],
+      "top_score": 0.7065
+    },
+    {
+      "question_id": "577d4d32",
+      "question_type": "single-session-user",
+      "question": "What time do I stop checking work emails and messages?",
+      "answer": "7 pm",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 730.1,
+      "leiden_chunks": 0,
+      "total_chunks": 34,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 34,
+      "num_sessions_ingested": 46,
+      "retrieved_sessions": [
+        "answer_0dd4d99a",
+        "ultrachat_125084",
+        "6e2cca63_2",
+        "88925167_1",
+        "2ef53f61_2",
+        "449b918c_1",
+        "f60245ed",
+        "6b42c631_2",
+        "sharegpt_pcoHTby_85",
+        "b283f9eb_1"
+      ],
+      "answer_sessions": [
+        "answer_0dd4d99a"
+      ],
+      "hits": [
+        "answer_0dd4d99a"
+      ],
+      "missed": [],
+      "top_score": 0.8103
+    },
+    {
+      "question_id": "ec81a493",
+      "question_type": "single-session-user",
+      "question": "How many copies of my favorite artist's debut album were released worldwide?",
+      "answer": "500",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 689.6,
+      "leiden_chunks": 0,
+      "total_chunks": 38,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 38,
+      "num_sessions_ingested": 51,
+      "retrieved_sessions": [
+        "answer_ed1982fc",
+        "4ed321f9",
+        "6f55019d",
+        "ultrachat_492664",
+        "0ba46bdc_3",
+        "ab4643a2_4",
+        "329ea290_1",
+        "sharegpt_ST22P5t_0",
+        "ultrachat_416901",
+        "4253b18c_1"
+      ],
+      "answer_sessions": [
+        "answer_ed1982fc"
+      ],
+      "hits": [
+        "answer_ed1982fc"
+      ],
+      "missed": [],
+      "top_score": 1.2239
+    },
+    {
+      "question_id": "15745da0",
+      "question_type": "single-session-user",
+      "question": "How long have I been collecting vintage cameras?",
+      "answer": "three months",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 717.0,
+      "leiden_chunks": 0,
+      "total_chunks": 35,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 35,
+      "num_sessions_ingested": 47,
+      "retrieved_sessions": [
+        "answer_586de428",
+        "07d33eaa",
+        "768544e1",
+        "ultrachat_155656",
+        "0d73afc8",
+        "sharegpt_iF4hlNs_5",
+        "1f5370f7_4",
+        "a4f22269",
+        "ultrachat_446016",
+        "sharegpt_f28uI6i_0"
+      ],
+      "answer_sessions": [
+        "answer_586de428"
+      ],
+      "hits": [
+        "answer_586de428"
+      ],
+      "missed": [],
+      "top_score": 0.7632
+    },
+    {
+      "question_id": "e01b8e2f",
+      "question_type": "single-session-user",
+      "question": "Where did I go on a week-long trip with my family?",
+      "answer": "Hawaii",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 632.1,
+      "leiden_chunks": 0,
+      "total_chunks": 39,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 39,
+      "num_sessions_ingested": 53,
+      "retrieved_sessions": [
+        "sharegpt_jyMHY1J_31",
+        "answer_5ca6cd28",
+        "ultrachat_433104",
+        "97338ddd_1",
+        "1aaf8057_3",
+        "8be2c3f1",
+        "8acfa731",
+        "d31c3ec8_1",
+        "d4cdb464",
+        "86c5d31d"
+      ],
+      "answer_sessions": [
+        "answer_5ca6cd28"
+      ],
+      "hits": [
+        "answer_5ca6cd28"
+      ],
+      "missed": [],
+      "top_score": 0.7423
+    },
+    {
+      "question_id": "bc8a6e93",
+      "question_type": "single-session-user",
+      "question": "What did I bake for my niece's birthday party?",
+      "answer": "a lemon blueberry cake",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 647.7,
+      "leiden_chunks": 0,
+      "total_chunks": 36,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 36,
+      "num_sessions_ingested": 48,
+      "retrieved_sessions": [
+        "answer_e6143162",
+        "b869d7ed_2",
+        "8c1da8f9_1",
+        "sharegpt_qyWsgp8_13",
+        "ultrachat_322154",
+        "f62bfe2b_1",
+        "6f8c03ab",
+        "a1b3dd27_1",
+        "552c7fd0",
+        "05594106_1"
+      ],
+      "answer_sessions": [
+        "answer_e6143162"
+      ],
+      "hits": [
+        "answer_e6143162"
+      ],
+      "missed": [],
+      "top_score": 0.7257
+    },
+    {
+      "question_id": "ccb36322",
+      "question_type": "single-session-user",
+      "question": "What is the name of the music streaming service have I been using lately?",
+      "answer": "Spotify",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 700.3,
+      "leiden_chunks": 0,
+      "total_chunks": 34,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 34,
+      "num_sessions_ingested": 46,
+      "retrieved_sessions": [
+        "04a0b385",
+        "bdcee74e_3",
+        "06d1a1a0",
+        "c38b33ae",
+        "answer_f1fbb330",
+        "0e349efa",
+        "8b1019b8_1",
+        "d99bab55_1",
+        "sharegpt_h1UXagU_9",
+        "sharegpt_9eug43q_0"
+      ],
+      "answer_sessions": [
+        "answer_f1fbb330"
+      ],
+      "hits": [
+        "answer_f1fbb330"
+      ],
+      "missed": [],
+      "top_score": 0.7117
+    },
+    {
+      "question_id": "001be529",
+      "question_type": "single-session-user",
+      "question": "How long did I wait for the decision on my asylum application?",
+      "answer": "over a year",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 696.9,
+      "leiden_chunks": 0,
+      "total_chunks": 38,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 38,
+      "num_sessions_ingested": 51,
+      "retrieved_sessions": [
+        "answer_530960c1",
+        "sharegpt_L5SCdrp_0",
+        "sharegpt_YQ4UlQM_83",
+        "0f71db75_1",
+        "sharegpt_PKXxlMF_0",
+        "9becef17_3",
+        "sharegpt_ETJwE0s_0",
+        "de877349",
+        "sharegpt_o3cfukb_0",
+        "a244d459"
+      ],
+      "answer_sessions": [
+        "answer_530960c1"
+      ],
+      "hits": [
+        "answer_530960c1"
+      ],
+      "missed": [],
+      "top_score": 0.7695
+    },
+    {
+      "question_id": "b320f3f8",
+      "question_type": "single-session-user",
+      "question": "What type of action figure did I buy from a thrift store?",
+      "answer": "a blue Snaggletooth",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 661.9,
+      "leiden_chunks": 0,
+      "total_chunks": 34,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 34,
+      "num_sessions_ingested": 46,
+      "retrieved_sessions": [
+        "answer_5cc9b056",
+        "aae4411b_2",
+        "1b71c896_2",
+        "sharegpt_4FCMpJR_0",
+        "514a7856_2",
+        "240d7361_1",
+        "8bb8bc0d",
+        "f2797fac",
+        "e28f75f4",
+        "ultrachat_562554"
+      ],
+      "answer_sessions": [
+        "answer_5cc9b056"
+      ],
+      "hits": [
+        "answer_5cc9b056"
+      ],
+      "missed": [],
+      "top_score": 0.7761
+    },
+    {
+      "question_id": "19b5f2b3",
+      "question_type": "single-session-user",
+      "question": "How long was I in Japan for?",
+      "answer": "two weeks",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 627.0,
+      "leiden_chunks": 0,
+      "total_chunks": 32,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 32,
+      "num_sessions_ingested": 43,
+      "retrieved_sessions": [
+        "answer_5ff494b9",
+        "ultrachat_440262",
+        "f379d356_1",
+        "ultrachat_8325",
+        "sharegpt_I0Wgney_11",
+        "ultrachat_268389",
+        "ultrachat_463145",
+        "ultrachat_138083",
+        "ultrachat_302261",
+        "9970ac13_2"
+      ],
+      "answer_sessions": [
+        "answer_5ff494b9"
+      ],
+      "hits": [
+        "answer_5ff494b9"
+      ],
+      "missed": [],
+      "top_score": 0.8181
+    },
+    {
+      "question_id": "4fd1909e",
+      "question_type": "single-session-user",
+      "question": "Where did I attend the Imagine Dragons concert?",
+      "answer": "Xfinity Center",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 614.5,
+      "leiden_chunks": 0,
+      "total_chunks": 41,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 41,
+      "num_sessions_ingested": 55,
+      "retrieved_sessions": [
+        "answer_2952aee4",
+        "ultrachat_59418",
+        "ultrachat_186237",
+        "sharegpt_hO4FoVt_0",
+        "502b6b52_2",
+        "2479cbae",
+        "sharegpt_bTDMt3m_0",
+        "sharegpt_KfwaCrk_0",
+        "f716720c_1",
+        "ad2135af"
+      ],
+      "answer_sessions": [
+        "answer_2952aee4"
+      ],
+      "hits": [
+        "answer_2952aee4"
+      ],
+      "missed": [],
+      "top_score": 0.875
+    },
+    {
+      "question_id": "545bd2b5",
+      "question_type": "single-session-user",
+      "question": "How much screen time have I been averaging on Instagram per day?",
+      "answer": "2 hours",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 722.2,
+      "leiden_chunks": 0,
+      "total_chunks": 33,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 33,
+      "num_sessions_ingested": 44,
+      "retrieved_sessions": [
+        "answer_47ffab4c",
+        "b7f69a7d_1",
+        "6e672b84_2",
+        "5fb3b5ac",
+        "74932466_3",
+        "d1a1b9ea_1",
+        "1351505a_1",
+        "ultrachat_317048",
+        "a79f1a04_1",
+        "cc021f81_2"
+      ],
+      "answer_sessions": [
+        "answer_47ffab4c"
+      ],
+      "hits": [
+        "answer_47ffab4c"
+      ],
+      "missed": [],
+      "top_score": 0.8607
+    },
+    {
+      "question_id": "8a137a7f",
+      "question_type": "single-session-user",
+      "question": "What type of bulb did I replace in my bedside lamp?",
+      "answer": "Philips LED bulb",
+      "skipped": false,
+      "recall_any": 1.0,
+      "recall_all": 1.0,
+      "recall_fraction": 1.0,
+      "chunk_answer_coverage": 1.0,
+      "avg_chunk_words": 610.7,
+      "leiden_chunks": 0,
+      "total_chunks": 38,
+      "num_answer_sessions": 1,
+      "num_chunks_retrieved": 38,
+      "num_sessions_ingested": 51,
+      "retrieved_sessions": [
+        "answer_15d63a22",
+        "77908e43_1",
+        "20507d15_2",
+        "ultrachat_90882",
+        "64460e9d_1",
+        "fcff2dc4_3",
+        "6bb37368",
+        "ultrachat_59795",
+        "ac583170_2",
+        "sharegpt_o1SCEXR_23"
+      ],
+      "answer_sessions": [
+        "answer_15d63a22"
+      ],
+      "hits": [
+        "answer_15d63a22"
+      ],
+      "missed": [],
+      "top_score": 0.7636
+    }
+  ]
+}
