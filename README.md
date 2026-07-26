@@ -2,6 +2,8 @@
 
 Leiden-chunked, graph-linked semantic memory as an MCP server — for Claude, Codex, and any MCP-compatible AI.
 
+**94% recall on LongMemEval** — the standard benchmark for long-term memory in AI assistants.
+
 ## Install
 
 ```bash
