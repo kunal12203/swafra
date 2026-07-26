@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "scimap": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "/path/to/scimap/packages/mcp"
+    }
+  }
+}

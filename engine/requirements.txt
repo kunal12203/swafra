@@ -1,0 +1,4 @@
+fastembed>=0.4.0
+igraph>=0.11.0
+leidenalg>=0.10.0
+numpy>=1.26.0
