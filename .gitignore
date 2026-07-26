@@ -4,3 +4,7 @@ node_modules/
 bench/data/
 bench/LongMemEval/
 engine/__pycache__/
+**/__pycache__/
+*.pyc
+dist/*.whl
+dist/*.tar.gz
