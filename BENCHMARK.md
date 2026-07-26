@@ -2,13 +2,13 @@
 
 ## LongMemEval-S — Session-Level Retrieval Recall
 
-**99.6% recall_all@10** on [LongMemEval-S](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned) — the standard benchmark for long-term memory in AI assistants.
+**94.7% recall_all@10** on [LongMemEval-S](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned) — the standard benchmark for long-term memory in AI assistants.
 
 > **What this measures:** Given a question and 53 conversation sessions (1–4 containing the answer, rest filler), did swafra retrieve chunks from the correct sessions? This is retrieval recall — the upper bound on how well any LLM reader could answer using swafra's output.
 
 | k | recall_any@10 | recall_all@10 | recall_fraction@10 |
 |---|--------------|--------------|-------------------|
-| 10 | **100.0%** | **99.6%** | **99.8%** |
+| 10 | **100.0%** | **94.7%** | **97.4%** |
 
 ### By Category
 
@@ -27,7 +27,7 @@ These are apples-to-apples — all retrieval recall numbers from the original Lo
 
 | System | recall_all@10 | Method |
 |--------|--------------|--------|
-| **swafra** | **99.6%** | Leiden chunks + BM25 + n-gram + source-diverse BFS |
+| **swafra** | **94.7%** | Leiden chunks + BM25 + n-gram + source-diverse BFS |
 | flat-stella (1.5B) | ~85–90% | Dense vector retrieval |
 | flat-bm25 | ~60–65% | BM25 only |
 
@@ -39,9 +39,9 @@ Supermemory and Mem0 report **end-to-end QA accuracy** (did the system answer th
 |--------|-------|--------|
 | Supermemory | 95.0% | end-to-end QA accuracy |
 | Mem0 | 94.4% | end-to-end QA accuracy |
-| **swafra** | **99.6%** | retrieval recall_all@10 |
+| **swafra** | **94.7%** | retrieval recall_all@10 |
 
-swafra's 99.6% means the correct session is in the retrieved context in 496/500 cases. End-to-end QA accuracy (how often Claude answers correctly given that context) is a separate, unmeasured step — and what supermemory/mem0 report. Retrieval recall is a necessary precondition: you can't answer correctly from context you didn't retrieve.
+swafra's 94.7% means the correct session is in the retrieved context in 470/500 cases. End-to-end QA accuracy (how often Claude answers correctly given that context) is a separate, unmeasured step — and what supermemory/mem0 report. Retrieval recall is a necessary precondition: you can't answer correctly from context you didn't retrieve.
 
 ---
 
