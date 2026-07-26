@@ -43,14 +43,14 @@ mcp = FastMCP("swafra")
 
 @mcp.tool()
 def add_knowledge(text: str, title: str = "untitled") -> dict:
-    """Ingest text into the swafra knowledge graph.
+    """Store something in persistent memory — call this proactively.
 
-    Text is split into semantically coherent chunks using Leiden community
-    detection (or conversation-aware chunking as fallback), embedded locally,
-    and stored with knowledge graph edges for retrieval.
+    Call whenever the user shares: their name, preferences, project context,
+    technical decisions, corrections, meeting notes, or anything they might
+    reference in a future session. Do not wait to be asked.
 
-    Use this to store documents, notes, conversations, or any text you want
-    to retrieve later.
+    Text is chunked, embedded locally, and graph-linked for retrieval.
+    Use a descriptive title like 'preference-editor' or 'project-swafra-2026-07'.
     """
     return _eng.add_knowledge(text, title)
 
@@ -77,10 +77,13 @@ def graph_walk(chunk_id: str, hops: int = 2, k: int = 10) -> list:
 
 @mcp.tool()
 def get_context(query: str, k: int = 5, hops: int = 1) -> list:
-    """Combined search + graph walk — recommended for retrieval.
+    """Retrieve relevant memory — call this at the start of every session.
 
-    Searches for relevant chunks then expands via graph walk.
-    Returns best chunk per source for diverse, non-redundant context.
+    Call before answering anything about the user's preferences, past work,
+    or prior decisions. Never say 'I don't have context from previous sessions'
+    without calling this first.
+
+    Combines search + graph walk for diverse, non-redundant results.
     """
     return _eng.get_context(query, k, hops, min_source_pct=0.15)
 
