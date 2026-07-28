@@ -22,6 +22,39 @@ npm install -g swafra
 
 ---
 
+## Upgrade
+
+```bash
+pip install --upgrade swafra
+```
+
+Or with Node.js:
+
+```bash
+npm update -g swafra
+```
+
+---
+
+## CLI
+
+After installing, run `swafra` in your terminal to see your knowledge graph stats:
+
+```bash
+swafra
+```
+
+Shows: sources, chunks, edges, communities, entities, facts, storage size, and more.
+
+| Command | What it does |
+|---------|-------------|
+| `swafra` | Show knowledge graph stats dashboard |
+| `swafra stats` | Same as above |
+| `swafra serve` | Start the MCP server |
+| `swafra help` | Show usage |
+
+---
+
 ## Connect to Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
