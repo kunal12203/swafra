@@ -1,12 +1,17 @@
 {
   "name": "swafra",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "MCP server for scimap knowledge graphs — Leiden-chunked, graph-linked semantic memory for Claude AI and ChatGPT",
   "type": "module",
   "bin": {
     "swafra": "dist/cli.js"
   },
   "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/sdk.js",
+    "./mcp": "./dist/index.js",
+    "./engine": "./dist/engine.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",

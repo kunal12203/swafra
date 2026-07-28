@@ -15,7 +15,7 @@ from engine.extractors import (
     _regex_extract_entities,
 )
 from engine.facts import get_chunk_fact_signals, ingest_facts
-from engine.llm import is_llm_available, llm_check_duplicate
+from engine.llm import is_llm_available, llm_call, llm_check_duplicate
 from engine.storage import (
     CHUNKS_FILE, EDGES_FILE, SOURCES_FILE,
     load_json, save_json,
@@ -25,6 +25,50 @@ from engine.tokenizer import tokenize
 
 def _gen_id(content: str) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:16]
+
+
+def _llm_rerank(query: str, candidates: list[dict]) -> list[dict]:
+    """Reorder candidates using a single batched LLM relevance-scoring call.
+
+    Falls back to original order on any failure.
+    """
+    if len(candidates) <= 1:
+        return candidates
+
+    numbered = "\n".join(
+        f"[{i}] {c['content'][:300]}" for i, c in enumerate(candidates)
+    )
+    prompt = (
+        f'Query: "{query}"\n\n'
+        f"Rate each chunk's relevance to the query (0-10):\n{numbered}\n\n"
+        f"Return ONLY valid JSON: {{\"scores\": [<score for [0]>, <score for [1]>, ...]}}\n"
+        f"Scores array must have exactly {len(candidates)} numbers."
+    )
+    system = (
+        "You are a relevance scorer. Score how well each text chunk answers the query. "
+        "Return ONLY valid JSON with a 'scores' array, no markdown, no explanation."
+    )
+    resp = llm_call(prompt, system)
+    if not resp:
+        return candidates
+
+    resp = resp.strip()
+    if resp.startswith("```"):
+        resp = resp.split("\n", 1)[-1].rsplit("```", 1)[0]
+
+    try:
+        parsed = json.loads(resp)
+        scores = parsed.get("scores", [])
+        if not isinstance(scores, list) or len(scores) != len(candidates):
+            return candidates
+        scored = sorted(
+            zip(scores, candidates),
+            key=lambda x: float(x[0]),
+            reverse=True,
+        )
+        return [c for _, c in scored]
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return candidates
 
 
 def add_knowledge(text: str, source_title: str = "untitled") -> dict:
@@ -178,7 +222,7 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
     }
 
 
-def search_knowledge(query: str, k: int = 8) -> list[dict]:
+def search_knowledge(query: str, k: int = 8, rerank: bool = False) -> list[dict]:
     chunks_store = load_json(CHUNKS_FILE) or []
     if not chunks_store:
         return []
@@ -311,6 +355,9 @@ def search_knowledge(query: str, k: int = 8) -> list[dict]:
         if len(results) >= k:
             break
 
+    if rerank and is_llm_available() and len(results) > 1:
+        results = _llm_rerank(query, results)
+
     return results
 
 
@@ -383,6 +430,9 @@ def get_context(query: str, k: int = 5, hops: int = 1, min_source_pct: float = 0
         if len(selected) >= target_sources:
             break
         selected.append(source_best[src])
+
+    if is_llm_available() and len(selected) > 1:
+        selected = _llm_rerank(query, selected)
 
     return selected
 

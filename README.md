@@ -55,6 +55,66 @@ swafra setup
 
 ---
 
+## Python SDK
+
+```python
+import swafra
+
+# Store knowledge
+swafra.add("I prefer dark mode and use VS Code", title="prefs")
+
+# Search
+results = swafra.search("editor")
+# [{"chunk_id": "...", "content": "...", "source_title": "prefs", "score": 0.9, ...}]
+
+# Get context (search + graph walk — recommended)
+ctx = swafra.context("what editor do I prefer?")
+
+# List everything stored
+srcs = swafra.sources()
+
+# Delete a source
+swafra.delete(srcs[0]["id"])
+```
+
+Class-style API (same behavior):
+
+```python
+from swafra import Memory
+
+m = Memory()
+m.add("React is my frontend framework", title="tech")
+m.search("frontend")
+m.context("what framework do I use?")
+m.sources()
+```
+
+---
+
+## JS/TS SDK
+
+```bash
+npm install swafra
+```
+
+```ts
+import { Memory } from 'swafra'
+
+const m = new Memory()
+
+await m.add("I use TypeScript daily", { title: "stack" })
+const results = await m.search("TypeScript")
+const ctx = await m.context("what language do I use?")
+const srcs = await m.sources()
+await m.delete(srcs[0].id)
+
+m.close() // shuts down the Python subprocess
+```
+
+Full TypeScript types are included — `AddResult`, `Chunk`, `Source`, `DeleteResult`.
+
+---
+
 ## CLI
 
 ```bash
@@ -221,8 +281,8 @@ Text is split into semantically coherent chunks using Leiden community detection
 **2. Local embeddings**
 Uses [fastembed](https://github.com/qdrant/fastembed) (ONNX, CPU-only, no API key) with `BAAI/bge-small-en-v1.5`. Falls back to deterministic hash vectors if fastembed isn't installed.
 
-**3. Hybrid retrieval**
-4-signal fused scoring: BM25 + vector cosine + entity/date overlap + character n-gram. Returns the best chunk per source for diverse, non-redundant context.
+**3. Hybrid retrieval + reranking**
+4-signal fused scoring: BM25 + vector cosine + entity/date overlap + character n-gram. Returns the best chunk per source for diverse, non-redundant context. When an LLM key is configured, a single batched relevance-scoring call reorders the final results for higher precision.
 
 **4. Knowledge graph**
 Chunks are connected with sequential (next/prev), similarity, entity co-occurrence, and cross-session edges. Graph walk expands retrieval beyond what search alone finds.
@@ -299,6 +359,12 @@ npm uninstall -g swafra
 ---
 
 ## Releases
+
+### 0.3.1
+
+- **Python SDK** — `import swafra; swafra.add("...")` works directly without MCP or CLI
+- **JS/TS SDK** — `import { Memory } from 'swafra'` for Node.js with full TypeScript types
+- **LLM reranking** — when an LLM key is configured, `get_context` and `search_knowledge(rerank=True)` run a single batched relevance-scoring call to reorder results; falls back silently when no LLM is available
 
 ### 0.3.0
 
