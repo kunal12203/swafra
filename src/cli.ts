@@ -3,11 +3,11 @@
  * swafra CLI — native Node.js stats dashboard.
  * Reads ~/.scimap/ JSON directly — no Python dependency needed.
  */
-import { readFileSync, writeFileSync, statSync, existsSync, mkdirSync, chmodSync } from "fs";
+import { readFileSync, writeFileSync, statSync, existsSync, mkdirSync, chmodSync, unlinkSync, rmSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 
-const VERSION = "0.2.5";
+const VERSION = "0.2.6";
 const DATA_DIR = process.env.SCIMAP_DATA_DIR || join(homedir(), ".scimap");
 
 function loadJson(filename: string): any[] {
@@ -281,6 +281,65 @@ You have persistent memory tools available via swafra MCP. Use them proactively.
   console.log();
 }
 
+function remove(global: boolean) {
+
+  const claudeDir = join(homedir(), ".claude");
+  const settingsPath = join(claudeDir, "settings.json");
+  const hooksDir = join(claudeDir, "hooks");
+
+  // Remove hook scripts
+  const removed: string[] = [];
+  for (const f of ["swafra-post-tool.sh", "swafra-stop.sh"]) {
+    const p = join(hooksDir, f);
+    if (existsSync(p)) { unlinkSync(p); removed.push(p); }
+  }
+
+  // Remove from settings.json
+  if (existsSync(settingsPath)) {
+    const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+    const hooks = settings.hooks || {};
+    for (const key of ["PostToolUse", "Stop"]) {
+      if (hooks[key]) {
+        hooks[key] = hooks[key].filter((h: any) => !JSON.stringify(h).includes("swafra"));
+      }
+    }
+    writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+  }
+
+  // Remove swafra block from CLAUDE.md
+  const claudeMdPath = join(claudeDir, "CLAUDE.md");
+  if (existsSync(claudeMdPath)) {
+    let content = readFileSync(claudeMdPath, "utf-8");
+    content = content.replace(/\n# swafra Memory\n[\s\S]*?(?=\n# |\s*$)/, "");
+    writeFileSync(claudeMdPath, content.trim() + "\n");
+  }
+
+  // Clean session markers
+  const sessionDir = join(homedir(), ".scimap", ".session");
+  if (existsSync(sessionDir)) {
+    rmSync(sessionDir, { recursive: true });
+  }
+
+  console.log();
+  console.log("  \x1b[1;32m✓\x1b[0m swafra hooks removed!");
+  console.log();
+  for (const r of removed) console.log(`    → Deleted: ${r}`);
+  console.log(`    → Cleaned: ${settingsPath}`);
+  console.log(`    → Cleaned: ${claudeMdPath}`);
+
+  if (global) {
+    const dataDir = process.env.SCIMAP_DATA_DIR || join(homedir(), ".scimap");
+    if (existsSync(dataDir)) {
+      rmSync(dataDir, { recursive: true });
+      console.log(`    → Deleted: ${dataDir} (all knowledge data)`);
+    }
+    console.log();
+    console.log("  To also remove the MCP server:");
+    console.log("    claude mcp remove swafra");
+  }
+  console.log();
+}
+
 function main() {
   const args = process.argv.slice(2);
   const cmd = args[0] || "stats";
@@ -294,6 +353,8 @@ function main() {
     import("./index.js");
   } else if (cmd === "setup") {
     setup();
+  } else if (cmd === "remove") {
+    remove(args[1] === "global");
   } else if (cmd === "help" || cmd === "-h" || cmd === "--help") {
     console.log();
     console.log("  \x1b[1;37mswafra\x1b[0m — semantic memory for AI");
@@ -303,6 +364,8 @@ function main() {
     console.log("    swafra stats        Same as above");
     console.log("    swafra serve        Start the MCP server");
     console.log("    swafra setup        Install hooks for Claude Code");
+    console.log("    swafra remove       Remove hooks from Claude Code");
+    console.log("    swafra remove global  Remove hooks + all stored data");
     console.log("    swafra help         Show this help");
     console.log();
   } else {

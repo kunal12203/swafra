@@ -191,7 +191,7 @@ if [ "$CHUNKS_SIZE" -lt 10 ]; then
 fi
 
 if [ ! -f "$MARKER_DIR/retrieved" ]; then
-    echo "SWAFRA: You have persistent memory but did not call get_context. Call it now with the user'"'"'s topic as the query." >&2
+    echo "SWAFRA: You have persistent memory but did not call get_context. Call it now with the user topic as the query." >&2
     rm -rf "$MARKER_DIR"
     exit 2
 fi
@@ -265,6 +265,71 @@ You have persistent memory tools available via swafra MCP. Use them proactively.
     print()
 
 
+def remove(global_remove: bool = False):
+    """Remove swafra hooks and optionally all data."""
+    import json
+
+    claude_dir = Path.home() / ".claude"
+    settings_path = claude_dir / "settings.json"
+    hooks_dir = claude_dir / "hooks"
+
+    # Remove hook scripts
+    removed = []
+    for hook_file in ["swafra-post-tool.sh", "swafra-stop.sh"]:
+        p = hooks_dir / hook_file
+        if p.exists():
+            p.unlink()
+            removed.append(str(p))
+
+    # Remove from settings.json
+    if settings_path.exists():
+        settings = json.loads(settings_path.read_text())
+        hooks = settings.get("hooks", {})
+        for key in ["PostToolUse", "Stop"]:
+            if key in hooks:
+                hooks[key] = [h for h in hooks[key] if "swafra" not in json.dumps(h)]
+        settings_path.write_text(json.dumps(settings, indent=2) + "\n")
+
+    # Remove swafra block from CLAUDE.md
+    claude_md = claude_dir / "CLAUDE.md"
+    if claude_md.exists():
+        content = claude_md.read_text()
+        # Remove the swafra section
+        import re
+        content = re.sub(r'\n# swafra Memory\n.*?(?=\n# |\Z)', '', content, flags=re.DOTALL)
+        claude_md.write_text(content.strip() + "\n")
+
+    # Clean session markers
+    session_dir = Path.home() / ".scimap" / ".session"
+    if session_dir.exists():
+        import shutil
+        shutil.rmtree(session_dir)
+
+    print()
+    print("  \033[1;32m✓\033[0m swafra hooks removed!")
+    print()
+    if removed:
+        for r in removed:
+            print(f"    → Deleted: {r}")
+    print(f"    → Cleaned: {settings_path}")
+    print(f"    → Cleaned: {claude_md}")
+
+    if global_remove:
+        # Remove all swafra data
+        data_dir = Path(os.getenv("SCIMAP_DATA_DIR", Path.home() / ".scimap"))
+        if data_dir.exists():
+            import shutil
+            shutil.rmtree(data_dir)
+            print(f"    → Deleted: {data_dir} (all knowledge data)")
+
+        # Remove MCP registration
+        print()
+        print("  To also remove the MCP server:")
+        print("    claude mcp remove swafra")
+
+    print()
+
+
 def main():
     args = sys.argv[1:]
 
@@ -278,6 +343,11 @@ def main():
         serve_main()
     elif args[0] == "setup":
         setup()
+    elif args[0] == "remove":
+        if len(args) > 1 and args[1] == "global":
+            remove(global_remove=True)
+        else:
+            remove(global_remove=False)
     elif args[0] in ("-h", "--help", "help"):
         print()
         print("  \033[1;37mswafra\033[0m — semantic memory for AI")
@@ -287,6 +357,8 @@ def main():
         print("    swafra stats        Same as above")
         print("    swafra serve        Start the MCP server")
         print("    swafra setup        Install hooks for Claude Code")
+        print("    swafra remove       Remove hooks from Claude Code")
+        print("    swafra remove global  Remove hooks + all stored data")
         print("    swafra help         Show this help")
         print()
     else:

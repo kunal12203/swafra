@@ -1,6 +1,6 @@
 {
   "name": "swafra",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "MCP server for scimap knowledge graphs — Leiden-chunked, graph-linked semantic memory for Claude AI and ChatGPT",
   "type": "module",
   "bin": {
