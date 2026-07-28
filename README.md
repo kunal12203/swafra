@@ -300,6 +300,15 @@ npm uninstall -g swafra
 
 ## Releases
 
+### 0.3.0
+
+- Adaptive storage: starts with JSON, auto-migrates to SQLite at 5k+ chunks
+- SQLite: ACID transactions, WAL mode, indexes — handles 100k+ chunks
+- No new dependencies (uses Python stdlib `sqlite3`)
+- `swafra migrate` command to switch to SQLite early
+- JSON files backed up as `.bak` after migration (safe rollback)
+- Stats dashboard reads from whichever backend is active
+
 ### 0.2.9
 
 - Security: API keys in `~/.scimap/config.json` are now stored with `600` permissions (owner-only)

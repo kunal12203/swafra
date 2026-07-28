@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync, statSync, existsSync, mkdirSync, chmodSync
 import { join } from "path";
 import { homedir } from "os";
 
-const VERSION = "0.2.9";
+const VERSION = "0.3.0";
 const DATA_DIR = process.env.SCIMAP_DATA_DIR || join(homedir(), ".scimap");
 
 function loadJson(filename: string): any[] {
