@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "swafra"
-version = "0.2.3"
+version = "0.2.4"
 description = "Leiden-chunked, graph-linked semantic memory as an MCP server for Claude, Copilot, and any MCP-compatible AI"
 readme = "README.md"
 license = { text = "MIT" }
