@@ -12,16 +12,28 @@ if (cmd === "serve") {
     import("./index.js");
 }
 else if (cmd === "stats" || args.length === 0) {
-    // Try Python swafra first
-    const result = spawnSync("python3", ["-m", "swafra.cli", ...args], {
-        stdio: "inherit",
-        env: process.env,
-    });
-    if (result.status !== 0 && result.error) {
-        // Python not available, show minimal info
+    // Try python3.12 first (3.14 is often broken on macOS), then python3
+    const pythons = ["python3.12", "python3.11", "python3"];
+    let success = false;
+    for (const py of pythons) {
+        const result = spawnSync(py, ["-m", "swafra.cli", ...args], {
+            stdio: "inherit",
+            env: process.env,
+            timeout: 10000,
+        });
+        if (!result.error && result.status === 0) {
+            success = true;
+            break;
+        }
+        if (!result.error && result.status !== null) {
+            // Python ran but swafra module not found — don't try other pythons
+            break;
+        }
+    }
+    if (!success) {
         console.log();
         console.log("  swafra (npm)");
-        console.log("  Python package not found — install with: pip install swafra");
+        console.log("  Python package not found — install with: pip3 install swafra");
         console.log("  The stats dashboard requires the Python package.");
         console.log();
         console.log("  To start the MCP server: swafra serve");
@@ -29,12 +41,22 @@ else if (cmd === "stats" || args.length === 0) {
     }
 }
 else if (cmd === "help" || cmd === "-h" || cmd === "--help") {
-    // Try Python help first for consistency
-    const helpResult = spawnSync("python3", ["-m", "swafra.cli", "help"], {
-        stdio: "inherit",
-        env: process.env,
-    });
-    if (helpResult.status !== 0 && helpResult.error) {
+    const pythons = ["python3.12", "python3.11", "python3"];
+    let shown = false;
+    for (const py of pythons) {
+        const r = spawnSync(py, ["-m", "swafra.cli", "help"], {
+            stdio: "inherit",
+            env: process.env,
+            timeout: 5000,
+        });
+        if (!r.error && r.status === 0) {
+            shown = true;
+            break;
+        }
+        if (!r.error && r.status !== null)
+            break;
+    }
+    if (!shown) {
         console.log();
         console.log("  swafra — semantic memory for AI");
         console.log();

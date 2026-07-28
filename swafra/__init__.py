@@ -1,2 +1,2 @@
 """swafra — Leiden-chunked, graph-linked semantic memory as an MCP server."""
-__version__ = "0.2.2"
+__version__ = "0.2.3"
