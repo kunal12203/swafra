@@ -30,8 +30,12 @@
     "node": ">=18"
   },
   "files": [
-    "dist",
-    "engine",
+    "dist/*.js",
+    "dist/*.d.ts",
+    "dist/*.map",
+    "engine/*.py",
+    "engine/requirements.txt",
+    "engine/scimap_engine.py",
     "skill"
   ],
   "keywords": [
