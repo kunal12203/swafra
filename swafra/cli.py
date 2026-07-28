@@ -91,6 +91,21 @@ def stats():
     print("  \033[1;36m╰─────────────────────────────────────────╯\033[0m")
     print()
 
+    # LLM status
+    config_file = DATA_DIR / "config.json"
+    llm_mode = "regex (fallback)"
+    if config_file.exists():
+        try:
+            cfg = json.loads(config_file.read_text())
+            if cfg.get("llm_provider") and cfg.get("llm_api_key"):
+                llm_mode = f"{cfg['llm_provider']} (active)"
+        except (json.JSONDecodeError, OSError):
+            pass
+    elif os.getenv("ANTHROPIC_API_KEY"):
+        llm_mode = "anthropic (env var)"
+    elif os.getenv("OPENAI_API_KEY"):
+        llm_mode = "openai (env var)"
+
     # Overview
     print("  \033[1;33m⚡ Overview\033[0m")
     print(f"     Sources:          {len(sources)}")
@@ -99,6 +114,7 @@ def stats():
     print(f"     Edges:            {len(edges)}")
     print(f"     Total tokens:     {total_tokens:,}")
     print(f"     Storage:          {_format_size(total_size)}")
+    print(f"     Extraction:       {llm_mode}")
     print(f"     Data dir:         {DATA_DIR}")
     print()
 
@@ -439,6 +455,110 @@ Try `python3.12` or `python3.11` instead.
 '''
 
 
+def configure_llm(args: list[str]):
+    """Configure LLM provider for enhanced entity extraction and dedup."""
+    config_file = DATA_DIR / "config.json"
+
+    if not args:
+        # Show current config
+        if config_file.exists():
+            cfg = json.loads(config_file.read_text())
+            provider = cfg.get("llm_provider", "not set")
+            has_key = "yes" if cfg.get("llm_api_key") else "no"
+            base_url = cfg.get("llm_base_url", "default")
+            print()
+            print("  \033[1;33m⚙ LLM Configuration\033[0m")
+            print(f"     Provider:   {provider}")
+            print(f"     Key set:    {has_key}")
+            if cfg.get("llm_base_url"):
+                print(f"     Base URL:   {base_url}")
+            print()
+        else:
+            print()
+            print("  No LLM configured. Using regex fallback for extraction.")
+            print()
+            print("  Configure with:")
+            print("    swafra config --provider anthropic --key sk-ant-...")
+            print("    swafra config --provider openai --key sk-...")
+            print("    swafra config --provider openai-compatible --key KEY --url http://localhost:11434/v1")
+            print()
+            print("  Or set environment variables:")
+            print("    ANTHROPIC_API_KEY=sk-ant-...")
+            print("    OPENAI_API_KEY=sk-...")
+            print("    SWAFRA_LLM_API_KEY=... + SWAFRA_LLM_BASE_URL=...")
+            print()
+        return
+
+    provider = None
+    api_key = None
+    base_url = None
+
+    i = 0
+    while i < len(args):
+        if args[i] in ("--provider", "-p") and i + 1 < len(args):
+            provider = args[i + 1]
+            i += 2
+        elif args[i] in ("--key", "-k") and i + 1 < len(args):
+            api_key = args[i + 1]
+            i += 2
+        elif args[i] in ("--url", "-u") and i + 1 < len(args):
+            base_url = args[i + 1]
+            i += 2
+        elif args[i] == "--clear":
+            if config_file.exists():
+                cfg = json.loads(config_file.read_text())
+                cfg.pop("llm_provider", None)
+                cfg.pop("llm_api_key", None)
+                cfg.pop("llm_base_url", None)
+                config_file.write_text(json.dumps(cfg, indent=2))
+            print("  \033[1;32m✓\033[0m LLM config cleared. Using regex fallback.")
+            return
+        else:
+            print(f"  Unknown option: {args[i]}")
+            return
+
+    if not provider or not api_key:
+        print("  Both --provider and --key are required.")
+        print("  Example: swafra config --provider anthropic --key sk-ant-...")
+        return
+
+    if provider not in ("anthropic", "openai", "openai-compatible"):
+        print(f"  Unknown provider: {provider}")
+        print("  Supported: anthropic, openai, openai-compatible")
+        return
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    cfg = {}
+    if config_file.exists():
+        try:
+            cfg = json.loads(config_file.read_text())
+        except json.JSONDecodeError:
+            cfg = {}
+
+    cfg["llm_provider"] = provider
+    cfg["llm_api_key"] = api_key
+    if base_url:
+        cfg["llm_base_url"] = base_url
+    elif "llm_base_url" in cfg:
+        del cfg["llm_base_url"]
+
+    config_file.write_text(json.dumps(cfg, indent=2))
+
+    print()
+    print("  \033[1;32m✓\033[0m LLM configured!")
+    print(f"     Provider: {provider}")
+    if base_url:
+        print(f"     Base URL: {base_url}")
+    print()
+    print("  swafra will now use LLM for:")
+    print("    • Entity extraction (catches lowercase tech terms, tools, concepts)")
+    print("    • Semantic dedup (skips storing duplicate knowledge)")
+    print("    • Preference/topic detection")
+    print()
+    print("  Fallback: regex (when LLM call fails or times out)")
+    print()
+
+
 def main():
     args = sys.argv[1:]
 
@@ -459,6 +579,8 @@ def main():
             remove(global_remove=True)
         else:
             remove(global_remove=False)
+    elif args[0] == "config":
+        configure_llm(args[1:])
     elif args[0] in ("-h", "--help", "help"):
         print()
         print("  \033[1;37mswafra\033[0m — semantic memory for AI")
@@ -469,6 +591,7 @@ def main():
         print("    swafra serve        Start the MCP server (for MCP clients)")
         print("    swafra setup        Install enforcement hooks for Claude Code")
         print("    swafra skill        Install as Claude Code skill (no MCP needed)")
+        print("    swafra config       Configure LLM for better extraction")
         print("    swafra remove       Disable hooks (keeps data)")
         print("    swafra remove global  Remove hooks + delete all stored data")
         print("    swafra help         Show this help")

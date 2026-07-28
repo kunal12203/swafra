@@ -10,8 +10,12 @@ from collections import defaultdict
 from engine.bm25 import BM25Index
 from engine.chunking import chunk_conversation, leiden_chunk
 from engine.embedding import cosine_sim, embed
-from engine.extractors import extract_dates, extract_entities
+from engine.extractors import (
+    clear_llm_cache, extract_dates, extract_entities,
+    _regex_extract_entities,
+)
 from engine.facts import get_chunk_fact_signals, ingest_facts
+from engine.llm import is_llm_available, llm_check_duplicate
 from engine.storage import (
     CHUNKS_FILE, EDGES_FILE, SOURCES_FILE,
     load_json, save_json,
@@ -29,6 +33,29 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
     sources_store = load_json(SOURCES_FILE) or []
 
     source_id = _gen_id(f"{source_title}:{text[:100]}")
+
+    # Semantic dedup: ask LLM if this duplicates existing knowledge
+    if is_llm_available() and sources_store:
+        existing_summaries = []
+        for src in sources_store:
+            src_chunks = [c for c in chunks_store if c.get("source_id") == src["id"]]
+            if src_chunks:
+                preview = src_chunks[0]["content"][:200]
+                existing_summaries.append(f"{src['title']}: {preview}")
+
+        if existing_summaries:
+            dedup_result = llm_check_duplicate(text, existing_summaries)
+            if dedup_result and dedup_result.get("is_duplicate"):
+                return {
+                    "source_id": source_id,
+                    "chunks": 0,
+                    "edges": 0,
+                    "skipped": True,
+                    "reason": dedup_result.get("reason", "duplicate content"),
+                    "duplicate_of": existing_summaries[dedup_result.get("duplicate_of_index", 0)][:80] if dedup_result.get("duplicate_of_index") is not None else None,
+                }
+
+    clear_llm_cache()
 
     chunks_store = [c for c in chunks_store if c.get("source_id") != source_id]
     edges_store = [e for e in edges_store if e.get("source_id") != source_id]
@@ -172,7 +199,7 @@ def search_knowledge(query: str, k: int = 8) -> list[dict]:
     for i, c in enumerate(chunks_store):
         vec_scores[i] = cosine_sim(qvec, c["embedding"])
 
-    query_entities = extract_entities(query)
+    query_entities = _regex_extract_entities(query)
     for m in re.finditer(r"['\"]([^'\"]{2,40})['\"]", query):
         query_entities.append(m.group(1).lower())
     query_dates = extract_dates(query)

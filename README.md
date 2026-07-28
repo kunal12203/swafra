@@ -69,6 +69,8 @@ Shows your full knowledge graph dashboard — sources, chunks, edges, communitie
 | `swafra stats` | Same as above |
 | `swafra serve` | Start the MCP server |
 | `swafra setup` | Install enforcement hooks for Claude Code |
+| `swafra skill` | Install as Claude Code skill (no MCP needed) |
+| `swafra config` | Configure LLM for enhanced extraction |
 | `swafra remove` | Disable hooks (keeps all data) |
 | `swafra remove global` | Remove hooks + delete all stored knowledge |
 | `swafra help` | Show usage |
@@ -145,6 +147,46 @@ To disable: `swafra remove`
 
 ---
 
+## LLM-enhanced extraction (optional)
+
+By default, swafra uses regex for entity extraction. Configure an LLM for significantly better results:
+
+```bash
+# Anthropic (uses Haiku 4.5 — fast and cheap)
+swafra config --provider anthropic --key sk-ant-...
+
+# OpenAI (uses gpt-4o-mini)
+swafra config --provider openai --key sk-...
+
+# Any OpenAI-compatible endpoint (ollama, together, groq, etc.)
+swafra config --provider openai-compatible --key KEY --url http://localhost:11434/v1
+```
+
+Or set environment variables (auto-detected, no config needed):
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+# or
+export OPENAI_API_KEY=sk-...
+# or
+export SWAFRA_LLM_API_KEY=... SWAFRA_LLM_BASE_URL=http://localhost:11434/v1
+```
+
+**What LLM extraction adds:**
+
+| Feature | Regex (default) | With LLM |
+|---------|----------------|----------|
+| Entity extraction | Title-cased words only | All entities including lowercase (python, react, kubernetes) |
+| Semantic dedup | None — stores duplicates | Detects and skips duplicate knowledge at ingest |
+| Preference detection | Pattern matching | Full semantic understanding |
+| Topic extraction | None | Identifies themes and topics |
+
+The LLM is called once per ingest (cheap — ~100 tokens per chunk). Search/retrieval never calls the LLM. Falls back to regex if the LLM call fails or times out.
+
+To remove: `swafra config --clear`
+
+---
+
 ## What you can do
 
 Once connected, Claude remembers and retrieves automatically:
@@ -185,10 +227,13 @@ Uses [fastembed](https://github.com/qdrant/fastembed) (ONNX, CPU-only, no API ke
 **4. Knowledge graph**
 Chunks are connected with sequential (next/prev), similarity, entity co-occurrence, and cross-session edges. Graph walk expands retrieval beyond what search alone finds.
 
-**5. Fact lifecycle**
+**5. LLM extraction (optional)**
+When an LLM key is configured, entities, preferences, and topics are extracted semantically — catching lowercase tech terms, tools, and concepts that regex misses. New content is checked for semantic duplication before storing. Falls back to regex when no LLM is available.
+
+**6. Fact lifecycle**
 Structured facts are extracted from chunks. When a new fact conflicts with an old one (e.g. "favorite editor" changes), the old fact is superseded — stale chunks get penalized in search.
 
-**6. Storage**
+**7. Storage**
 JSON files in `~/.scimap/`. No database, no server, no cloud. Everything runs locally.
 
 ---
@@ -226,6 +271,10 @@ JSON files in `~/.scimap/`. No database, no server, no cloud. Everything runs lo
 |----------|---------|-------------|
 | `SCIMAP_DATA_DIR` | `~/.scimap` | Where knowledge is stored |
 | `SCIMAP_EMBED_MODEL` | `BAAI/bge-small-en-v1.5` | Embedding model |
+| `ANTHROPIC_API_KEY` | — | Anthropic key (auto-enables LLM extraction) |
+| `OPENAI_API_KEY` | — | OpenAI key (auto-enables LLM extraction) |
+| `SWAFRA_LLM_API_KEY` | — | Custom LLM key (use with `SWAFRA_LLM_BASE_URL`) |
+| `SWAFRA_LLM_BASE_URL` | — | OpenAI-compatible endpoint URL |
 
 ---
 
@@ -246,6 +295,49 @@ pip uninstall swafra
 # or
 npm uninstall -g swafra
 ```
+
+---
+
+## Releases
+
+### 0.2.8
+
+- LLM-powered entity extraction — catches all entities including lowercase tech terms
+- Semantic dedup at ingest — stops duplicate knowledge from being stored
+- `swafra config` command for LLM provider setup
+- Supports Anthropic, OpenAI, and any OpenAI-compatible endpoint (ollama, together, groq)
+- Falls back to regex when no LLM configured — zero breakage
+
+### 0.2.7
+
+- `swafra skill` — install as Claude Code skill (no MCP server needed)
+- Skill uses bash commands directly, works without running a server process
+
+### 0.2.6
+
+- `swafra setup` — enforcement hooks that guarantee Claude uses memory
+- `swafra remove` / `swafra remove global` commands
+- Stop hook wakes Claude back up if it skips `get_context`
+- Stronger tool descriptions ("MANDATORY: call before first response")
+
+### 0.2.5
+
+- Native Node.js CLI — `npm install -g swafra` works without Python dependency for stats
+- Fix: CLI hang on Python 3.14 (broken libexpat)
+
+### 0.2.2
+
+- `swafra` CLI stats dashboard — sources, chunks, edges, communities, entities
+- Works from both pip and npm installs with no conflicts
+
+### 0.1.5
+
+- Proactive tool descriptions
+- `CLAUDE.md` injection for automatic memory usage
+
+### 0.1.2
+
+- Initial release — MCP server with Leiden chunking, hybrid retrieval, fact lifecycle
 
 ---
 

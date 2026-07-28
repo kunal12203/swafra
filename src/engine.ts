@@ -2,13 +2,41 @@
  * Python engine bridge — spawns the scimap_engine.py subprocess and communicates
  * via JSON-line protocol over stdin/stdout.
  */
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, execFileSync, type ChildProcess } from "node:child_process";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ENGINE_PATH = join(__dirname, "..", "engine", "scimap_engine.py");
+
+function findPython(): string {
+  if (process.env.SCIMAP_PYTHON) return process.env.SCIMAP_PYTHON;
+
+  const candidates =
+    process.platform === "win32"
+      ? ["python3.12", "python3.11", "python3.13", "python3", "python", "py"]
+      : ["python3.12", "python3.11", "python3.13", "python3.10", "python3", "python"];
+
+  for (const cmd of candidates) {
+    try {
+      const out = execFileSync(cmd, ["-c", "import sys, importlib; importlib.import_module('pip'); print(f'{sys.version_info.major}.{sys.version_info.minor}')"], {
+        encoding: "utf8",
+        timeout: 5000,
+        stdio: ["ignore", "pipe", "pipe"],
+      }).trim();
+      const match = out.match(/^(\d+)\.(\d+)$/);
+      if (match && parseInt(match[1]) >= 3 && parseInt(match[2]) >= 10) {
+        return cmd;
+      }
+    } catch {
+      // not found, not executable, or pip broken
+    }
+  }
+  throw new Error(
+    "No suitable Python (>=3.10) with working pip found. Install Python 3.10+ or set SCIMAP_PYTHON env var."
+  );
+}
 
 type PendingRequest = {
   resolve: (value: unknown) => void;
@@ -22,7 +50,7 @@ export class Engine {
   private ready = false;
 
   async start(): Promise<void> {
-    const pythonCmd = process.env.SCIMAP_PYTHON || "python3";
+    const pythonCmd = findPython();
 
     this.proc = spawn(pythonCmd, [ENGINE_PATH], {
       stdio: ["pipe", "pipe", "pipe"],

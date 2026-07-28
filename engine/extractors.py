@@ -1,10 +1,14 @@
-"""Entity, date, and preference extraction from text."""
+"""Entity, date, and preference extraction from text.
+
+Uses LLM when available for high-quality semantic extraction.
+Falls back to regex patterns when no LLM key is configured.
+"""
 from __future__ import annotations
 
 import re
 
 # ---------------------------------------------------------------------------
-# Date/temporal extraction
+# Date/temporal extraction (always regex — dates are structural, not semantic)
 # ---------------------------------------------------------------------------
 _DATE_PATTERNS = [
     re.compile(r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})(?:st|nd|rd|th)?\b', re.I),
@@ -23,6 +27,34 @@ def extract_dates(text: str) -> list[str]:
         for m in pat.finditer(text):
             dates.append(m.group(0).lower())
     return dates
+
+
+# ---------------------------------------------------------------------------
+# LLM-powered extraction (single call returns entities + preferences + topics)
+# ---------------------------------------------------------------------------
+_llm_cache: dict[int, dict | None] = {}
+
+
+def _llm_extract_all(text: str) -> dict | None:
+    """One LLM call per unique text, cached for the duration of this ingest."""
+    key = hash(text[:2000])
+    if key in _llm_cache:
+        return _llm_cache[key]
+
+    from engine.llm import is_llm_available, llm_extract_entities
+
+    if not is_llm_available():
+        _llm_cache[key] = None
+        return None
+
+    result = llm_extract_entities(text)
+    _llm_cache[key] = result
+    return result
+
+
+def clear_llm_cache():
+    """Clear between ingest calls to avoid stale cache across sources."""
+    _llm_cache.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -46,7 +78,7 @@ _NAME_STOPWORDS = frozenset({
 })
 
 
-def extract_entities(text: str) -> list[str]:
+def _regex_extract_entities(text: str) -> list[str]:
     entities = []
     for m in _ENTITY_RE.finditer(text):
         ent = m.group(1)
@@ -55,6 +87,16 @@ def extract_entities(text: str) -> list[str]:
     for m in re.finditer(r"['\"]([^'\"]{2,40})['\"]", text):
         entities.append(m.group(1).lower())
     return list(set(entities))
+
+
+def extract_entities(text: str) -> list[str]:
+    result = _llm_extract_all(text)
+    if result:
+        combined = set(result.get("entities", []))
+        combined.update(result.get("topics", []))
+        if combined:
+            return list(combined)
+    return _regex_extract_entities(text)
 
 
 # ---------------------------------------------------------------------------
@@ -69,9 +111,16 @@ _PREF_PATTERNS = [
 ]
 
 
-def extract_preferences(text: str) -> list[str]:
+def _regex_extract_preferences(text: str) -> list[str]:
     prefs = []
     for pat in _PREF_PATTERNS:
         for m in pat.finditer(text):
             prefs.append(m.group(0).lower().strip())
     return prefs
+
+
+def extract_preferences(text: str) -> list[str]:
+    result = _llm_extract_all(text)
+    if result and result.get("preferences"):
+        return result["preferences"]
+    return _regex_extract_preferences(text)
