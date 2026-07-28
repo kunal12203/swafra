@@ -300,6 +300,14 @@ npm uninstall -g swafra
 
 ## Releases
 
+### 0.2.9
+
+- Security: API keys in `~/.scimap/config.json` are now stored with `600` permissions (owner-only)
+- Added MIT LICENSE file
+- `--model` flag: choose any model your provider offers
+- Node CLI has full `swafra config` parity with Python CLI
+- Cleaner npm package (excluded test files and bytecode)
+
 ### 0.2.8
 
 - LLM-powered entity extraction — catches all entities including lowercase tech terms
