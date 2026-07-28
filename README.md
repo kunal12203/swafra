@@ -360,6 +360,12 @@ npm uninstall -g swafra
 
 ## Releases
 
+### 0.3.2
+
+- Fix: SQLite backend was bypassed — after auto-migration all reads/writes still hit JSON files, making the knowledge base appear empty. All operations now route through the adaptive storage layer correctly.
+- Fix: `get_context(k=5)` could return 35+ results with many sources. `k` is now a hard ceiling.
+- Fix: intra-source chunk supersession never fired on re-ingest (old chunks were checked after being stripped from the store).
+
 ### 0.3.1
 
 - **Python SDK** — `import swafra; swafra.add("...")` works directly without MCP or CLI
