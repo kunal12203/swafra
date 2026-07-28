@@ -23,6 +23,48 @@ def _load(path: Path):
     return []
 
 
+def _load_from_sqlite() -> tuple[list, list, list, list]:
+    """Load all data from SQLite for stats display."""
+    import sqlite3
+    db_path = DATA_DIR / "swafra.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+
+    chunks = []
+    for r in conn.execute("SELECT * FROM chunks"):
+        entities = []
+        try:
+            entities = json.loads(r["entities"]) if r["entities"] else []
+        except (json.JSONDecodeError, TypeError):
+            pass
+        chunks.append({
+            "id": r["id"], "source_id": r["source_id"], "source_title": r["source_title"],
+            "content": r["content"], "token_count": r["token_count"],
+            "chunk_index": r["chunk_index"], "community_id": r["community_id"],
+            "entities": entities, "type": r["type"],
+            "superseded_by": r["superseded_by"], "created_at": r["created_at"],
+        })
+
+    edges = []
+    for r in conn.execute("SELECT * FROM edges"):
+        edges.append({"source_id": r["source_id"], "from": r["from_id"],
+                      "to": r["to_id"], "type": r["type"], "weight": r["weight"]})
+
+    sources = []
+    for r in conn.execute("SELECT * FROM sources"):
+        sources.append({"id": r["id"], "title": r["title"], "chunks": r["chunks"]})
+
+    facts = []
+    try:
+        for r in conn.execute("SELECT * FROM facts"):
+            facts.append({"id": r["id"], "valid_to": r["valid_to"]})
+    except sqlite3.OperationalError:
+        pass
+
+    conn.close()
+    return chunks, edges, sources, facts
+
+
 def _format_size(nbytes: int) -> str:
     if nbytes < 1024:
         return f"{nbytes} B"
@@ -43,10 +85,14 @@ def stats():
         print(f"  Data directory: {DATA_DIR}")
         return
 
-    chunks = _load(CHUNKS_FILE)
-    edges = _load(EDGES_FILE)
-    sources = _load(SOURCES_FILE)
-    facts = _load(FACTS_FILE)
+    db_path = DATA_DIR / "swafra.db"
+    if db_path.exists():
+        chunks, edges, sources, facts = _load_from_sqlite()
+    else:
+        chunks = _load(CHUNKS_FILE)
+        edges = _load(EDGES_FILE)
+        sources = _load(SOURCES_FILE)
+        facts = _load(FACTS_FILE)
 
     active_chunks = [c for c in chunks if not c.get("superseded_by")]
     superseded_chunks = [c for c in chunks if c.get("superseded_by")]
@@ -113,7 +159,15 @@ def stats():
     print(f"     Superseded:       {len(superseded_chunks)}")
     print(f"     Edges:            {len(edges)}")
     print(f"     Total tokens:     {total_tokens:,}")
-    print(f"     Storage:          {_format_size(total_size)}")
+    # Storage backend
+    db_path = DATA_DIR / "swafra.db"
+    if db_path.exists():
+        storage_backend = "sqlite (adaptive)"
+        total_size = db_path.stat().st_size
+    else:
+        storage_backend = "json"
+
+    print(f"     Storage:          {_format_size(total_size)} ({storage_backend})")
     print(f"     Extraction:       {llm_mode}")
     print(f"     Data dir:         {DATA_DIR}")
     print()
@@ -572,6 +626,39 @@ def configure_llm(args: list[str]):
     print()
 
 
+def migrate_storage():
+    """Migrate from JSON to SQLite storage."""
+    from engine.storage import force_migrate, DB_FILE
+
+    db_path = DATA_DIR / "swafra.db"
+    if db_path.exists():
+        print()
+        print("  Already using SQLite storage.")
+        print(f"  Database: {db_path}")
+        print()
+        return
+
+    chunks_file = DATA_DIR / "chunks.json"
+    if not chunks_file.exists():
+        print()
+        print("  No JSON data to migrate.")
+        print()
+        return
+
+    print()
+    print("  Migrating JSON → SQLite...")
+    result = force_migrate()
+    print(f"  \033[1;32m✓\033[0m Migration complete!")
+    print(f"  Database: {db_path}")
+    print(f"  JSON backups: {DATA_DIR}/*.json.bak")
+    print()
+    print("  Benefits:")
+    print("    • Handles 100k+ chunks without slowdown")
+    print("    • ACID transactions (no corruption on crash)")
+    print("    • Faster queries with indexes")
+    print()
+
+
 def main():
     args = sys.argv[1:]
 
@@ -594,6 +681,8 @@ def main():
             remove(global_remove=False)
     elif args[0] == "config":
         configure_llm(args[1:])
+    elif args[0] == "migrate":
+        migrate_storage()
     elif args[0] in ("-h", "--help", "help"):
         print()
         print("  \033[1;37mswafra\033[0m — semantic memory for AI")
@@ -605,6 +694,7 @@ def main():
         print("    swafra setup        Install enforcement hooks for Claude Code")
         print("    swafra skill        Install as Claude Code skill (no MCP needed)")
         print("    swafra config       Configure LLM for better extraction")
+        print("    swafra migrate      Switch storage from JSON to SQLite now")
         print("    swafra remove       Disable hooks (keeps data)")
         print("    swafra remove global  Remove hooks + delete all stored data")
         print("    swafra help         Show this help")
