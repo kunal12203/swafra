@@ -8,3 +8,5 @@ engine/__pycache__/
 *.pyc
 dist/*.whl
 dist/*.tar.gz
+graphify-out/
+packages/mcp/dist/
