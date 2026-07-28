@@ -3,10 +3,10 @@
  * swafra CLI — native Node.js stats dashboard.
  * Reads ~/.scimap/ JSON directly — no Python dependency needed.
  */
-import { readFileSync, statSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, statSync, existsSync, mkdirSync, chmodSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-const VERSION = "0.2.4";
+const VERSION = "0.2.5";
 const DATA_DIR = process.env.SCIMAP_DATA_DIR || join(homedir(), ".scimap");
 function loadJson(filename) {
     const path = join(DATA_DIR, filename);
@@ -152,6 +152,109 @@ function stats() {
         console.log();
     }
 }
+function setup() {
+    const claudeDir = join(homedir(), ".claude");
+    const settingsPath = join(claudeDir, "settings.json");
+    const hooksDir = join(claudeDir, "hooks");
+    mkdirSync(hooksDir, { recursive: true });
+    // Write hook scripts
+    const postToolPath = join(hooksDir, "swafra-post-tool.sh");
+    writeFileSync(postToolPath, `#!/bin/bash
+MARKER_DIR="\${HOME}/.scimap/.session"
+mkdir -p "$MARKER_DIR"
+if [[ "$TOOL_NAME" == *"get_context"* ]]; then
+    touch "$MARKER_DIR/retrieved"
+fi
+if [[ "$TOOL_NAME" == *"add_knowledge"* ]]; then
+    touch "$MARKER_DIR/stored"
+fi
+exit 0
+`);
+    chmodSync(postToolPath, 0o755);
+    const stopHookPath = join(hooksDir, "swafra-stop.sh");
+    writeFileSync(stopHookPath, `#!/bin/bash
+MARKER_DIR="\${HOME}/.scimap/.session"
+if [ ! -f "\${HOME}/.scimap/chunks.json" ]; then
+    rm -rf "$MARKER_DIR"
+    exit 0
+fi
+CHUNKS_SIZE=$(stat -f%z "\${HOME}/.scimap/chunks.json" 2>/dev/null || stat -c%s "\${HOME}/.scimap/chunks.json" 2>/dev/null || echo "0")
+if [ "$CHUNKS_SIZE" -lt 10 ]; then
+    rm -rf "$MARKER_DIR"
+    exit 0
+fi
+if [ ! -f "$MARKER_DIR/retrieved" ]; then
+    echo "SWAFRA: You have persistent memory but did not call get_context. Call it now with the user's topic as the query." >&2
+    rm -rf "$MARKER_DIR"
+    exit 2
+fi
+rm -rf "$MARKER_DIR"
+exit 0
+`);
+    chmodSync(stopHookPath, 0o755);
+    // Update settings.json
+    let settings = {};
+    if (existsSync(settingsPath)) {
+        try {
+            settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+        }
+        catch { }
+    }
+    const hooks = settings.hooks = settings.hooks || {};
+    // PostToolUse
+    let postHooks = hooks.PostToolUse || [];
+    postHooks = postHooks.filter((h) => !JSON.stringify(h).includes("swafra"));
+    postHooks.push({
+        matcher: "mcp__swafra",
+        hooks: [{ type: "command", command: `bash ${postToolPath}`, timeout: 5 }]
+    });
+    hooks.PostToolUse = postHooks;
+    // Stop
+    let stopHooks = hooks.Stop || [];
+    stopHooks = stopHooks.filter((h) => !JSON.stringify(h).includes("swafra"));
+    stopHooks.push({
+        matcher: "",
+        hooks: [{ type: "command", command: `bash ${stopHookPath}`, timeout: 5 }]
+    });
+    hooks.Stop = stopHooks;
+    writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+    // CLAUDE.md
+    const claudeMdPath = join(claudeDir, "CLAUDE.md");
+    const swafraBlock = `
+# swafra Memory
+
+You have persistent memory tools available via swafra MCP. Use them proactively.
+
+## Rules
+- ALWAYS call \`get_context\` at the start of every conversation with the user's topic
+- ALWAYS call \`add_knowledge\` when the user shares preferences, decisions, context, or corrections
+- Never say "I don't have context from previous sessions" without calling \`get_context\` first
+- Use descriptive titles when storing: 'preference-editor', 'project-name', 'meeting-2026-07'
+`;
+    if (existsSync(claudeMdPath)) {
+        const content = readFileSync(claudeMdPath, "utf-8");
+        if (!content.toLowerCase().includes("swafra")) {
+            writeFileSync(claudeMdPath, content.trimEnd() + "\n" + swafraBlock);
+        }
+    }
+    else {
+        writeFileSync(claudeMdPath, swafraBlock);
+    }
+    console.log();
+    console.log("  \x1b[1;32m✓\x1b[0m swafra hooks installed!");
+    console.log();
+    console.log("  What was set up:");
+    console.log(`    → Stop hook:        ${stopHookPath}`);
+    console.log(`    → PostToolUse hook: ${postToolPath}`);
+    console.log(`    → Settings:         ${settingsPath}`);
+    console.log(`    → CLAUDE.md:        ${claudeMdPath}`);
+    console.log();
+    console.log("  Claude will now:");
+    console.log("    • Always call get_context at session start");
+    console.log("    • Proactively store knowledge without being asked");
+    console.log("    • Get reminded if it forgets");
+    console.log();
+}
 function main() {
     const args = process.argv.slice(2);
     const cmd = args[0] || "stats";
@@ -164,6 +267,9 @@ function main() {
     else if (cmd === "serve") {
         import("./index.js");
     }
+    else if (cmd === "setup") {
+        setup();
+    }
     else if (cmd === "help" || cmd === "-h" || cmd === "--help") {
         console.log();
         console.log("  \x1b[1;37mswafra\x1b[0m — semantic memory for AI");
@@ -172,6 +278,7 @@ function main() {
         console.log("    swafra              Show knowledge graph stats");
         console.log("    swafra stats        Same as above");
         console.log("    swafra serve        Start the MCP server");
+        console.log("    swafra setup        Install hooks for Claude Code");
         console.log("    swafra help         Show this help");
         console.log();
     }

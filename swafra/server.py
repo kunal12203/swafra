@@ -43,11 +43,17 @@ mcp = FastMCP("swafra")
 
 @mcp.tool()
 def add_knowledge(text: str, title: str = "untitled") -> dict:
-    """Store something in persistent memory — call this proactively.
+    """Store something in persistent memory — call this WITHOUT being asked.
 
-    Call whenever the user shares: their name, preferences, project context,
-    technical decisions, corrections, meeting notes, or anything they might
-    reference in a future session. Do not wait to be asked.
+    ALWAYS call this when the user shares ANY of:
+    - Their name, role, preferences, or personal context
+    - Project decisions, architecture, or technical choices
+    - Corrections to your behavior or rules to follow
+    - Documents, meeting notes, or long-form content
+    - Anything they might reference in a future conversation
+
+    Do NOT wait for the user to say "remember this". If information has future
+    value, store it immediately. Err on the side of storing too much.
 
     Text is chunked, embedded locally, and graph-linked for retrieval.
     Use a descriptive title like 'preference-editor' or 'project-swafra-2026-07'.
@@ -77,11 +83,14 @@ def graph_walk(chunk_id: str, hops: int = 2, k: int = 10) -> list:
 
 @mcp.tool()
 def get_context(query: str, k: int = 5, hops: int = 1) -> list:
-    """Retrieve relevant memory — call this at the start of every session.
+    """MANDATORY: Call this BEFORE your first response in every conversation.
 
-    Call before answering anything about the user's preferences, past work,
-    or prior decisions. Never say 'I don't have context from previous sessions'
-    without calling this first.
+    This is persistent memory from previous sessions. You MUST call this tool
+    before responding to the user's first message — use their question/topic as
+    the query. Without this, you are missing context the user expects you to know.
+
+    Also call before answering anything about the user's preferences, past work,
+    or prior decisions. Never say 'I don't have context' without calling this first.
 
     Combines search + graph walk for diverse, non-redundant results.
     """
