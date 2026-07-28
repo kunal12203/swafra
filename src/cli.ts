@@ -530,6 +530,7 @@ function config(args: string[]) {
   if (model) cfg.llm_model = model; else delete cfg.llm_model;
 
   writeFileSync(configPath, JSON.stringify(cfg, null, 2));
+  try { chmodSync(configPath, 0o600); } catch {}
 
   console.log();
   console.log("  \x1b[1;32m✓\x1b[0m LLM configured!");

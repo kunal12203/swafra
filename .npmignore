@@ -1,0 +1,13 @@
+**/__pycache__
+**/*.pyc
+**/*.pyo
+dist/*.whl
+dist/*.tar.gz
+bench/
+packages/
+graphify-out/
+IMPROVEMENTS.md
+test_stability.py
+package-lock.json
+.claude/
+.env

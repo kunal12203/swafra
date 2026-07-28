@@ -223,3 +223,4 @@ def save_config(provider: str, api_key: str, base_url: str | None = None, model:
     _CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(_CONFIG_FILE, "w") as f:
         json.dump(cfg, f, indent=2)
+    os.chmod(_CONFIG_FILE, 0o600)

@@ -10,4 +10,7 @@ dist/*.whl
 dist/*.tar.gz
 graphify-out/
 packages/mcp/dist/
+package-lock.json
+test_stability.py
+IMPROVEMENTS.md
 RELEASING.md

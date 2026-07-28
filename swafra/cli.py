@@ -554,6 +554,7 @@ def configure_llm(args: list[str]):
         del cfg["llm_model"]
 
     config_file.write_text(json.dumps(cfg, indent=2))
+    os.chmod(config_file, 0o600)
 
     print()
     print("  \033[1;32m✓\033[0m LLM configured!")
