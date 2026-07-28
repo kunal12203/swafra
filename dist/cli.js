@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync, statSync, existsSync, mkdirSync, chmodSync, unlinkSync, rmSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-const VERSION = "0.2.6";
+const VERSION = "0.2.7";
 const DATA_DIR = process.env.SCIMAP_DATA_DIR || join(homedir(), ".scimap");
 function loadJson(filename) {
     const path = join(DATA_DIR, filename);
@@ -310,6 +310,88 @@ function remove(global) {
     }
     console.log();
 }
+function installSkill() {
+    const skillDir = join(homedir(), ".claude", "skills", "swafra");
+    mkdirSync(skillDir, { recursive: true });
+    const skillContent = `# swafra — Persistent Memory Skill
+
+You have persistent memory across sessions via swafra. Use it proactively — never wait for the user to ask.
+
+## Commands
+
+Run these via bash. All output is JSON.
+
+### Retrieve memory (MANDATORY — call before your first response)
+
+\`\`\`bash
+python3 -m swafra.engine_cli get_context "USER_TOPIC_OR_QUESTION"
+\`\`\`
+
+### Store knowledge (call WITHOUT being asked)
+
+\`\`\`bash
+python3 -m swafra.engine_cli add "TEXT_TO_STORE" "descriptive-title"
+\`\`\`
+
+### Search memory
+
+\`\`\`bash
+python3 -m swafra.engine_cli search "query" 8
+\`\`\`
+
+### List all stored sources
+
+\`\`\`bash
+python3 -m swafra.engine_cli list
+\`\`\`
+
+### Delete a source
+
+\`\`\`bash
+python3 -m swafra.engine_cli delete "SOURCE_ID"
+\`\`\`
+
+### Graph walk (explore connections from a chunk)
+
+\`\`\`bash
+python3 -m swafra.engine_cli walk "CHUNK_ID" 2 10
+\`\`\`
+
+## Rules
+
+1. **ALWAYS call \\\`get_context\\\` before your first response** — use the user's question/topic as the query
+2. **ALWAYS call \\\`add\\\` when the user shares ANY of:**
+   - Their name, role, preferences, or personal context
+   - Project decisions, architecture, or technical choices
+   - Corrections to your behavior or rules to follow
+   - Documents, meeting notes, or long-form content
+3. **Never say "I don't have context from previous sessions"** without calling \\\`get_context\\\` first
+4. **Use descriptive titles** when storing: \\\`preference-editor\\\`, \\\`project-swafra\\\`, \\\`meeting-2026-07-28\\\`
+5. **Err on the side of storing too much** — if it has future value, store it
+
+## How it works
+
+- Data is stored locally in \\\`~/.scimap/\\\` as JSON (no cloud, no database)
+- Text is chunked using Leiden community detection, embedded locally, and graph-linked
+- Retrieval uses hybrid scoring: BM25 + vector cosine + entity overlap + n-gram matching
+- Facts are tracked with lifecycle management (old facts get superseded, stale chunks penalized)
+
+## If python3 doesn't work
+
+Try \\\`python3.12\\\` or \\\`python3.11\\\` instead.
+`;
+    writeFileSync(join(skillDir, "SKILL.md"), skillContent);
+    console.log();
+    console.log("  \x1b[1;32m✓\x1b[0m swafra skill installed!");
+    console.log();
+    console.log(`    → ${join(skillDir, "SKILL.md")}`);
+    console.log();
+    console.log("  Claude Code will now use swafra memory via bash commands.");
+    console.log("  No MCP server needed — works directly through the skill.");
+    console.log();
+    console.log("  Note: Requires `pip install swafra` for the engine.");
+    console.log();
+}
 function main() {
     const args = process.argv.slice(2);
     const cmd = args[0] || "stats";
@@ -325,6 +407,9 @@ function main() {
     else if (cmd === "setup") {
         setup();
     }
+    else if (cmd === "skill") {
+        installSkill();
+    }
     else if (cmd === "remove") {
         remove(args[1] === "global");
     }
@@ -335,10 +420,11 @@ function main() {
         console.log("  Usage:");
         console.log("    swafra              Show knowledge graph stats");
         console.log("    swafra stats        Same as above");
-        console.log("    swafra serve        Start the MCP server");
-        console.log("    swafra setup        Install hooks for Claude Code");
-        console.log("    swafra remove       Remove hooks from Claude Code");
-        console.log("    swafra remove global  Remove hooks + all stored data");
+        console.log("    swafra serve        Start the MCP server (for MCP clients)");
+        console.log("    swafra setup        Install enforcement hooks for Claude Code");
+        console.log("    swafra skill        Install as Claude Code skill (no MCP needed)");
+        console.log("    swafra remove       Disable hooks (keeps data)");
+        console.log("    swafra remove global  Remove hooks + delete all stored data");
         console.log("    swafra help         Show this help");
         console.log();
     }

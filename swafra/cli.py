@@ -330,6 +330,115 @@ def remove(global_remove: bool = False):
     print()
 
 
+def install_skill():
+    """Install swafra as a Claude Code skill (no MCP needed)."""
+    import shutil
+
+    skill_dir = Path.home() / ".claude" / "skills" / "swafra"
+    skill_dir.mkdir(parents=True, exist_ok=True)
+
+    # Find the SKILL.md source
+    candidates = [
+        Path(__file__).parent.parent / "skill" / "SKILL.md",
+        Path(__file__).parent / "skill" / "SKILL.md",
+    ]
+
+    skill_src = None
+    for c in candidates:
+        if c.exists():
+            skill_src = c
+            break
+
+    if not skill_src:
+        # Write it inline as fallback
+        skill_content = _get_skill_content()
+    else:
+        skill_content = skill_src.read_text()
+
+    (skill_dir / "SKILL.md").write_text(skill_content)
+
+    print()
+    print("  \033[1;32m✓\033[0m swafra skill installed!")
+    print()
+    print(f"    → {skill_dir / 'SKILL.md'}")
+    print()
+    print("  Claude Code will now use swafra memory via bash commands.")
+    print("  No MCP server needed — works directly through the skill.")
+    print()
+    print("  Note: Requires `pip install swafra` for the engine.")
+    print()
+
+
+def _get_skill_content() -> str:
+    return '''# swafra — Persistent Memory Skill
+
+You have persistent memory across sessions via swafra. Use it proactively — never wait for the user to ask.
+
+## Commands
+
+Run these via bash. All output is JSON.
+
+### Retrieve memory (MANDATORY — call before your first response)
+
+```bash
+python3 -m swafra.engine_cli get_context "USER_TOPIC_OR_QUESTION"
+```
+
+### Store knowledge (call WITHOUT being asked)
+
+```bash
+python3 -m swafra.engine_cli add "TEXT_TO_STORE" "descriptive-title"
+```
+
+### Search memory
+
+```bash
+python3 -m swafra.engine_cli search "query" 8
+```
+
+### List all stored sources
+
+```bash
+python3 -m swafra.engine_cli list
+```
+
+### Delete a source
+
+```bash
+python3 -m swafra.engine_cli delete "SOURCE_ID"
+```
+
+### Graph walk (explore connections from a chunk)
+
+```bash
+python3 -m swafra.engine_cli walk "CHUNK_ID" 2 10
+```
+
+## Rules
+
+1. **ALWAYS call `get_context` before your first response** — use the user\'s question/topic as the query
+2. **ALWAYS call `add` when the user shares ANY of:**
+   - Their name, role, preferences, or personal context
+   - Project decisions, architecture, or technical choices
+   - Corrections to your behavior or rules to follow
+   - Documents, meeting notes, or long-form content
+3. **Never say "I don\'t have context from previous sessions"** without calling `get_context` first
+4. **Use descriptive titles** when storing: `preference-editor`, `project-swafra`, `meeting-2026-07-28`
+5. **Err on the side of storing too much** — if it has future value, store it
+
+## How it works
+
+- Data is stored locally in `~/.scimap/` as JSON (no cloud, no database)
+- Text is chunked using Leiden community detection, embedded locally, and graph-linked
+- Retrieval uses hybrid scoring: BM25 + vector cosine + entity overlap + n-gram matching
+- Facts are tracked with lifecycle management (old facts get superseded, stale chunks penalized)
+
+## If python3 doesn\'t work
+
+Try `python3.12` or `python3.11` instead.
+'''
+
+
 def main():
     args = sys.argv[1:]
 
@@ -343,6 +452,8 @@ def main():
         serve_main()
     elif args[0] == "setup":
         setup()
+    elif args[0] == "skill":
+        install_skill()
     elif args[0] == "remove":
         if len(args) > 1 and args[1] == "global":
             remove(global_remove=True)
@@ -355,10 +466,11 @@ def main():
         print("  Usage:")
         print("    swafra              Show knowledge graph stats")
         print("    swafra stats        Same as above")
-        print("    swafra serve        Start the MCP server")
-        print("    swafra setup        Install hooks for Claude Code")
-        print("    swafra remove       Remove hooks from Claude Code")
-        print("    swafra remove global  Remove hooks + all stored data")
+        print("    swafra serve        Start the MCP server (for MCP clients)")
+        print("    swafra setup        Install enforcement hooks for Claude Code")
+        print("    swafra skill        Install as Claude Code skill (no MCP needed)")
+        print("    swafra remove       Disable hooks (keeps data)")
+        print("    swafra remove global  Remove hooks + delete all stored data")
         print("    swafra help         Show this help")
         print()
     else:
