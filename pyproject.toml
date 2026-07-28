@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "swafra"
-version = "0.1.5"
+version = "0.2.2"
 description = "Leiden-chunked, graph-linked semantic memory as an MCP server for Claude, Copilot, and any MCP-compatible AI"
 readme = "README.md"
 license = { text = "MIT" }
@@ -23,18 +23,19 @@ classifiers = [
 ]
 dependencies = [
     "mcp>=1.0.0",
+    "fastembed>=0.4.0",
+    "numpy>=1.26.0",
+    "networkx>=3.0",
 ]
 
 [project.optional-dependencies]
-full = [
-    "fastembed>=0.4.0",
-    "numpy>=1.26.0",
+leiden = [
     "igraph>=0.11.0",
     "leidenalg>=0.10.0",
 ]
 
 [project.scripts]
-swafra = "swafra.server:main"
+swafra = "swafra.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/kunal12203/swafra"
@@ -42,7 +43,7 @@ Repository = "https://github.com/kunal12203/swafra"
 "Bug Tracker" = "https://github.com/kunal12203/swafra/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["swafra"]
+packages = ["swafra", "engine"]
 
 [tool.hatch.build.targets.sdist]
-include = ["swafra/", "README.md", "LICENSE", "BENCHMARK.md"]
+include = ["swafra/", "engine/", "README.md", "LICENSE"]
