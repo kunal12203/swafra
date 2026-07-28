@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import re
 import time
@@ -17,8 +18,14 @@ from engine.extractors import (
 from engine.facts import get_chunk_fact_signals, ingest_facts
 from engine.llm import is_llm_available, llm_call, llm_check_duplicate
 from engine.storage import (
+    # JSON backend
     CHUNKS_FILE, EDGES_FILE, SOURCES_FILE,
     load_json, save_json,
+    # SQLite backend
+    get_backend,
+    db_load_active_chunks, db_load_chunks, db_load_edges, db_load_sources,
+    db_save_chunks, db_save_edges, db_add_edges,
+    db_save_source, db_delete_source, db_supersede_chunk,
 )
 from engine.tokenizer import tokenize
 
@@ -26,6 +33,96 @@ from engine.tokenizer import tokenize
 def _gen_id(content: str) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:16]
 
+
+# ---------------------------------------------------------------------------
+# Storage dispatch — routes to JSON or SQLite based on active backend
+# ---------------------------------------------------------------------------
+
+def _load_all_chunks() -> list[dict]:
+    if get_backend() == "sqlite":
+        return db_load_active_chunks()
+    chunks = load_json(CHUNKS_FILE) or []
+    return [c for c in chunks if not c.get("superseded_by")]
+
+
+def _load_all_chunks_including_superseded() -> list[dict]:
+    if get_backend() == "sqlite":
+        return db_load_chunks()
+    return load_json(CHUNKS_FILE) or []
+
+
+def _load_all_edges() -> list[dict]:
+    if get_backend() == "sqlite":
+        return db_load_edges()
+    return load_json(EDGES_FILE) or []
+
+
+def _load_all_sources() -> list[dict]:
+    if get_backend() == "sqlite":
+        return db_load_sources()
+    return load_json(SOURCES_FILE) or []
+
+
+def _save_source_chunks(new_chunks: list[dict], source_id: str,
+                        all_chunks_json: list[dict] | None = None):
+    """Persist chunks for a source. all_chunks_json only needed for JSON backend."""
+    if get_backend() == "sqlite":
+        db_save_chunks(new_chunks, source_id)
+    else:
+        # Replace this source's chunks in the full store
+        other = [c for c in (all_chunks_json or []) if c.get("source_id") != source_id]
+        save_json(CHUNKS_FILE, other + new_chunks)
+
+
+def _save_source_edges(source_edges: list[dict], cross_edges: list[dict],
+                       source_id: str, all_edges_json: list[dict] | None = None):
+    """Persist intra-source edges and cross-session edges."""
+    if get_backend() == "sqlite":
+        db_save_edges(source_edges, source_id)
+        if cross_edges:
+            db_add_edges(cross_edges)
+    else:
+        other = [e for e in (all_edges_json or []) if e.get("source_id") != source_id]
+        save_json(EDGES_FILE, other + source_edges + cross_edges)
+
+
+def _save_source_record(source_id: str, title: str, chunk_count: int,
+                        all_sources_json: list[dict] | None = None):
+    if get_backend() == "sqlite":
+        db_save_source(source_id, title, chunk_count)
+    else:
+        others = [s for s in (all_sources_json or []) if s["id"] != source_id]
+        save_json(SOURCES_FILE, others + [{"id": source_id, "title": title, "chunks": chunk_count}])
+
+
+def _delete_source_data(source_id: str) -> int:
+    if get_backend() == "sqlite":
+        return db_delete_source(source_id)
+    # JSON path
+    chunks = load_json(CHUNKS_FILE) or []
+    edges = load_json(EDGES_FILE) or []
+    sources = load_json(SOURCES_FILE) or []
+    before = len(chunks)
+    save_json(CHUNKS_FILE, [c for c in chunks if c.get("source_id") != source_id])
+    save_json(EDGES_FILE, [e for e in edges if e.get("source_id") != source_id])
+    save_json(SOURCES_FILE, [s for s in sources if s.get("id") != source_id])
+    return before - len([c for c in chunks if c.get("source_id") != source_id])
+
+
+def _supersede_chunk_record(chunk_id: str, superseded_by: str,
+                             all_chunks_json: list[dict] | None = None):
+    if get_backend() == "sqlite":
+        db_supersede_chunk(chunk_id, superseded_by)
+    else:
+        for c in (all_chunks_json or []):
+            if c["id"] == chunk_id:
+                c["superseded_by"] = superseded_by
+                break
+
+
+# ---------------------------------------------------------------------------
+# LLM reranking
+# ---------------------------------------------------------------------------
 
 def _llm_rerank(query: str, candidates: list[dict]) -> list[dict]:
     """Reorder candidates using a single batched LLM relevance-scoring call.
@@ -71,18 +168,24 @@ def _llm_rerank(query: str, candidates: list[dict]) -> list[dict]:
         return candidates
 
 
+# ---------------------------------------------------------------------------
+# Core operations
+# ---------------------------------------------------------------------------
+
 def add_knowledge(text: str, source_title: str = "untitled") -> dict:
-    chunks_store = load_json(CHUNKS_FILE) or []
-    edges_store = load_json(EDGES_FILE) or []
-    sources_store = load_json(SOURCES_FILE) or []
+    # Load all existing data upfront (needed for dedup, cross-session edges,
+    # supersession checks, and JSON save-back).
+    all_chunks = _load_all_chunks_including_superseded()
+    all_edges = _load_all_edges()
+    all_sources = _load_all_sources()
 
     source_id = _gen_id(f"{source_title}:{text[:100]}")
 
     # Semantic dedup: ask LLM if this duplicates existing knowledge
-    if is_llm_available() and sources_store:
+    if is_llm_available() and all_sources:
         existing_summaries = []
-        for src in sources_store:
-            src_chunks = [c for c in chunks_store if c.get("source_id") == src["id"]]
+        for src in all_sources:
+            src_chunks = [c for c in all_chunks if c.get("source_id") == src["id"]]
             if src_chunks:
                 preview = src_chunks[0]["content"][:200]
                 existing_summaries.append(f"{src['title']}: {preview}")
@@ -96,27 +199,30 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
                     "edges": 0,
                     "skipped": True,
                     "reason": dedup_result.get("reason", "duplicate content"),
-                    "duplicate_of": existing_summaries[dedup_result.get("duplicate_of_index", 0)][:80] if dedup_result.get("duplicate_of_index") is not None else None,
+                    "duplicate_of": existing_summaries[dedup_result.get("duplicate_of_index", 0)][:80]
+                        if dedup_result.get("duplicate_of_index") is not None else None,
                 }
 
     clear_llm_cache()
 
-    chunks_store = [c for c in chunks_store if c.get("source_id") != source_id]
-    edges_store = [e for e in edges_store if e.get("source_id") != source_id]
+    # Save old chunks for this source BEFORE stripping them — needed for
+    # intra-source supersession check below.
+    old_source_chunks = [c for c in all_chunks if c.get("source_id") == source_id]
 
+    # Build new chunks
     pieces = leiden_chunk(text)
     if not pieces:
         pieces = chunk_conversation(text, source_title)
-
     if not pieces:
         return {"source_id": source_id, "chunks": 0, "edges": 0}
 
     vectors = embed([p["content"] for p in pieces])
+    new_chunks: list[dict] = []
     chunk_ids = []
     for piece, vec in zip(pieces, vectors):
         cid = _gen_id(f"{source_id}:{piece['chunk_index']}")
         chunk_ids.append(cid)
-        chunks_store.append({
+        new_chunks.append({
             "id": cid,
             "source_id": source_id,
             "source_title": source_title,
@@ -134,10 +240,27 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
             "superseded_by": None,
         })
 
-    new_edges = []
+    # Intra-source supersession: mark old chunks superseded if very similar
+    # to new ones from the same source (re-ingestion of updated content).
+    superseded_old_ids: list[tuple[str, str]] = []  # (old_chunk_id, new_chunk_id)
+    for new_chunk, new_vec in zip(chunk_ids, vectors):
+        new_entities = set(pieces[chunk_ids.index(new_chunk)].get("entities", []))
+        if len(new_entities) < 3:
+            continue
+        for old_c in old_source_chunks:
+            if old_c.get("superseded_by"):
+                continue
+            old_entities = set(old_c.get("entities", []))
+            if len(new_entities & old_entities) >= 3:
+                sim = cosine_sim(new_vec, old_c["embedding"])
+                if sim >= 0.85:
+                    superseded_old_ids.append((old_c["id"], new_chunk))
+
+    # Build intra-source edges
+    source_edges = []
     for i in range(len(chunk_ids) - 1):
-        new_edges.append({"source_id": source_id, "from": chunk_ids[i], "to": chunk_ids[i+1], "type": "next", "weight": 1.0})
-        new_edges.append({"source_id": source_id, "from": chunk_ids[i+1], "to": chunk_ids[i], "type": "prev", "weight": 1.0})
+        source_edges.append({"source_id": source_id, "from": chunk_ids[i], "to": chunk_ids[i+1], "type": "next", "weight": 1.0})
+        source_edges.append({"source_id": source_id, "from": chunk_ids[i+1], "to": chunk_ids[i], "type": "prev", "weight": 1.0})
 
     for i in range(len(vectors)):
         sims = []
@@ -149,7 +272,7 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
                 sims.append((j, s))
         sims.sort(key=lambda x: x[1], reverse=True)
         for j, score in sims[:5]:
-            new_edges.append({"source_id": source_id, "from": chunk_ids[i], "to": chunk_ids[j], "type": "similar", "weight": score})
+            source_edges.append({"source_id": source_id, "from": chunk_ids[i], "to": chunk_ids[j], "type": "similar", "weight": score})
 
     entity_to_chunks: dict[str, list[str]] = defaultdict(list)
     for cid, piece in zip(chunk_ids, pieces):
@@ -159,29 +282,18 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
         if len(cids) > 1 and len(cids) <= 10:
             for i in range(len(cids)):
                 for j in range(i + 1, len(cids)):
-                    new_edges.append({"source_id": source_id, "from": cids[i], "to": cids[j], "type": "entity", "weight": 0.6})
+                    source_edges.append({"source_id": source_id, "from": cids[i], "to": cids[j], "type": "entity", "weight": 0.6})
 
-    old_chunks = [c for c in chunks_store if c.get("source_id") == source_id and c["id"] not in chunk_ids]
-    for new_chunk, new_vec in zip(chunk_ids, vectors):
-        new_entities = set(pieces[chunk_ids.index(new_chunk)].get("entities", []))
-        if len(new_entities) < 3:
-            continue
-        for old_c in old_chunks:
-            if old_c.get("superseded_by"):
-                continue
-            old_entities = set(old_c.get("entities", []))
-            if len(new_entities & old_entities) >= 3:
-                sim = cosine_sim(new_vec, old_c["embedding"])
-                if sim >= 0.85:
-                    old_c["superseded_by"] = new_chunk
-
-    other_chunks = [c for c in chunks_store if c.get("source_id") != source_id and not c.get("superseded_by")]
-    if other_chunks:
+    # Cross-session edges: link new chunks to best matching chunk per other source
+    other_active = [c for c in all_chunks
+                    if c.get("source_id") != source_id and not c.get("superseded_by")]
+    cross_edges = []
+    if other_active:
         other_by_source: dict[str, list] = defaultdict(list)
-        for c in other_chunks:
+        for c in other_active:
             other_by_source[c["source_id"]].append(c)
 
-        for new_idx, (new_cid, new_vec) in enumerate(zip(chunk_ids, vectors)):
+        for new_cid, new_vec in zip(chunk_ids, vectors):
             candidates = []
             for src_id, src_chunks in other_by_source.items():
                 best = max(src_chunks, key=lambda c: cosine_sim(new_vec, c["embedding"]))
@@ -190,7 +302,7 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
                     candidates.append((sim, best))
             candidates.sort(key=lambda x: x[0], reverse=True)
             for sim, other_c in candidates[:3]:
-                new_edges.append({
+                cross_edges.append({
                     "source_id": None,
                     "from": new_cid,
                     "to": other_c["id"],
@@ -206,28 +318,26 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
         facts_summary["conflicts"] += r["conflicts"]
         facts_summary["superseded"] += r["superseded"]
 
-    edges_store.extend(new_edges)
-    sources_store = [s for s in sources_store if s["id"] != source_id]
-    sources_store.append({"id": source_id, "title": source_title, "chunks": len(pieces)})
+    # Persist — order matters: supersede old chunks first, then save new ones
+    for old_cid, new_cid in superseded_old_ids:
+        _supersede_chunk_record(old_cid, new_cid, all_chunks)
 
-    save_json(CHUNKS_FILE, chunks_store)
-    save_json(EDGES_FILE, edges_store)
-    save_json(SOURCES_FILE, sources_store)
+    # For JSON backend we need to pass the full store for save-back
+    full_chunks_for_json = [c for c in all_chunks if c.get("source_id") != source_id] + new_chunks
+    _save_source_chunks(new_chunks, source_id, full_chunks_for_json)
+    _save_source_edges(source_edges, cross_edges, source_id, all_edges)
+    _save_source_record(source_id, source_title, len(pieces), all_sources)
 
     return {
         "source_id": source_id,
         "chunks": len(pieces),
-        "edges": len(new_edges),
+        "edges": len(source_edges) + len(cross_edges),
         "facts": facts_summary,
     }
 
 
 def search_knowledge(query: str, k: int = 8, rerank: bool = False) -> list[dict]:
-    chunks_store = load_json(CHUNKS_FILE) or []
-    if not chunks_store:
-        return []
-
-    chunks_store = [c for c in chunks_store if not c.get("superseded_by")]
+    chunks_store = _load_all_chunks()  # already filters superseded
     if not chunks_store:
         return []
 
@@ -318,7 +428,6 @@ def search_knowledge(query: str, k: int = 8, rerank: bool = False) -> list[dict]
             decay = math.exp(-0.005 * days_old)
         else:
             decay = 1.0
-        # Fact lifecycle: penalize stale, boost if chunk has active facts relevant to query
         chunk_id = chunks_store[i].get("id")
         if chunk_id in stale_penalties:
             penalty = stale_penalties[chunk_id]
@@ -362,10 +471,10 @@ def search_knowledge(query: str, k: int = 8, rerank: bool = False) -> list[dict]
 
 
 def graph_walk(chunk_id: str, hops: int = 2, k: int = 10) -> list[dict]:
-    chunks_store = load_json(CHUNKS_FILE) or []
-    edges_store = load_json(EDGES_FILE) or []
+    all_chunks = _load_all_chunks_including_superseded()
+    edges_store = _load_all_edges()
 
-    chunk_map = {c["id"]: c for c in chunks_store}
+    chunk_map = {c["id"]: c for c in all_chunks}
     if chunk_id not in chunk_map:
         return []
 
@@ -399,12 +508,18 @@ def graph_walk(chunk_id: str, hops: int = 2, k: int = 10) -> list[dict]:
 
 
 def get_context(query: str, k: int = 5, hops: int = 1, min_source_pct: float = 0.15) -> list[dict]:
-    sources_store = load_json(SOURCES_FILE) or []
-    total_sources = len(sources_store)
-    target_sources = max(k, int(total_sources * min_source_pct)) if total_sources > 0 else k
+    all_sources = _load_all_sources()
+    total_sources = len(all_sources)
 
-    chunks_store = load_json(CHUNKS_FILE) or []
-    all_hits = search_knowledge(query, k=len(chunks_store))
+    # target_sources: at least cover min_source_pct of sources, but never exceed k
+    if total_sources > 0:
+        pct_target = max(1, int(total_sources * min_source_pct))
+        target_sources = min(k, pct_target) if pct_target <= k else k
+    else:
+        target_sources = k
+
+    total_chunks = len(_load_all_chunks())
+    all_hits = search_knowledge(query, k=max(total_chunks, 1))
     if not all_hits:
         return []
 
@@ -438,21 +553,9 @@ def get_context(query: str, k: int = 5, hops: int = 1, min_source_pct: float = 0
 
 
 def list_sources() -> list[dict]:
-    return load_json(SOURCES_FILE) or []
+    return _load_all_sources()
 
 
 def delete_source(source_id: str) -> dict:
-    chunks_store = load_json(CHUNKS_FILE) or []
-    edges_store = load_json(EDGES_FILE) or []
-    sources_store = load_json(SOURCES_FILE) or []
-
-    before = len(chunks_store)
-    chunks_store = [c for c in chunks_store if c.get("source_id") != source_id]
-    edges_store = [e for e in edges_store if e.get("source_id") != source_id]
-    sources_store = [s for s in sources_store if s.get("id") != source_id]
-
-    save_json(CHUNKS_FILE, chunks_store)
-    save_json(EDGES_FILE, edges_store)
-    save_json(SOURCES_FILE, sources_store)
-
-    return {"deleted_chunks": before - len(chunks_store)}
+    deleted = _delete_source_data(source_id)
+    return {"deleted_chunks": deleted}

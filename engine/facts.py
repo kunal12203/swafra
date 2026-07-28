@@ -17,9 +17,22 @@ import time
 from pathlib import Path
 
 from engine.embedding import cosine_sim, embed
-from engine.storage import DATA_DIR, load_json, save_json
+from engine.storage import DATA_DIR, load_json, save_json, get_backend, db_load_facts, db_save_facts
 
 FACTS_FILE = DATA_DIR / "facts.json"
+
+
+def _load_facts() -> list[dict]:
+    if get_backend() == "sqlite":
+        return db_load_facts()
+    return load_json(FACTS_FILE) or []
+
+
+def _save_facts(facts: list[dict]):
+    if get_backend() == "sqlite":
+        db_save_facts(facts)
+    else:
+        save_json(FACTS_FILE, facts)
 
 # ---------------------------------------------------------------------------
 # Fact schema
@@ -360,7 +373,7 @@ def ingest_facts(text: str, chunk_id: str, source_id: str) -> dict:
 
     Returns summary of what happened.
     """
-    facts_store = load_json(FACTS_FILE) or []
+    facts_store = _load_facts()
 
     new_facts = extract_facts(text, chunk_id, source_id)
     if not new_facts:
@@ -396,7 +409,7 @@ def ingest_facts(text: str, chunk_id: str, source_id: str) -> dict:
             existing_ids.add(f["id"])
             added += 1
 
-    save_json(FACTS_FILE, facts_store)
+    _save_facts(facts_store)
 
     return {
         "extracted": len(new_facts),
@@ -412,7 +425,7 @@ def get_chunk_fact_signals() -> tuple[dict[str, float], dict[str, list[str]]]:
     penalties: chunk_id -> 0-1 staleness ratio
     active_values: chunk_id -> list of active fact values (for query-aware boosting)
     """
-    facts_store = load_json(FACTS_FILE) or []
+    facts_store = _load_facts()
 
     chunk_stale: dict[str, int] = {}
     chunk_active: dict[str, int] = {}
@@ -444,7 +457,7 @@ def get_superseded_chunk_ids() -> dict[str, float]:
 
 def get_active_facts(subject: str = None, relation: str = None) -> list[dict]:
     """Get currently-valid facts, optionally filtered."""
-    facts_store = load_json(FACTS_FILE) or []
+    facts_store = _load_facts()
     active = [f for f in facts_store if f.get("valid_until") is None]
 
     if subject:
@@ -457,7 +470,7 @@ def get_active_facts(subject: str = None, relation: str = None) -> list[dict]:
 
 def get_fact_history(subject: str = None, relation: str = None) -> list[dict]:
     """Get full fact timeline including superseded ones, ordered by time."""
-    facts_store = load_json(FACTS_FILE) or []
+    facts_store = _load_facts()
 
     results = facts_store
     if subject:
@@ -471,12 +484,12 @@ def get_fact_history(subject: str = None, relation: str = None) -> list[dict]:
 
 def invalidate_fact(fact_id: str) -> bool:
     """Manually mark a fact as no longer valid."""
-    facts_store = load_json(FACTS_FILE) or []
+    facts_store = _load_facts()
 
     for f in facts_store:
         if f["id"] == fact_id and f.get("valid_until") is None:
             f["valid_until"] = time.time()
-            save_json(FACTS_FILE, facts_store)
+            _save_facts(facts_store)
             return True
 
     return False

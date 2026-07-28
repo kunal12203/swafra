@@ -165,6 +165,15 @@ def _init_schema(conn: sqlite3.Connection):
             key TEXT PRIMARY KEY,
             value TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS facts_data (
+            id TEXT PRIMARY KEY,
+            chunk_id TEXT,
+            source_id TEXT,
+            data TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_fdata_chunk ON facts_data(chunk_id);
+        CREATE INDEX IF NOT EXISTS idx_fdata_source ON facts_data(source_id);
     """)
     conn.execute("INSERT OR IGNORE INTO meta(key, value) VALUES ('version', '1')")
     conn.commit()
@@ -369,6 +378,7 @@ def _migrate_json_to_sqlite():
     if FACTS_FILE.exists():
         facts = load_json(FACTS_FILE)
         for f in facts:
+            # Legacy structured table (keep for backward compat)
             conn.execute("""
                 INSERT OR IGNORE INTO facts (id, subject, predicate, object, value,
                     chunk_id, source_id, confidence, valid_from, valid_to, superseded_by)
@@ -379,6 +389,11 @@ def _migrate_json_to_sqlite():
                 f.get("confidence"), f.get("valid_from"), f.get("valid_to"),
                 f.get("superseded_by"),
             ))
+            # Full-fidelity blob table (used by current code)
+            conn.execute(
+                "INSERT OR IGNORE INTO facts_data (id, chunk_id, source_id, data) VALUES (?, ?, ?, ?)",
+                (f.get("id", ""), f.get("chunk_id"), f.get("source_id"), json.dumps(f, default=str)),
+            )
 
     conn.commit()
 
@@ -387,6 +402,34 @@ def _migrate_json_to_sqlite():
         if p.exists():
             backup = p.with_suffix(".json.bak")
             p.rename(backup)
+
+
+# ---------------------------------------------------------------------------
+# SQLite facts CRUD (full-fidelity JSON blob per fact)
+# ---------------------------------------------------------------------------
+
+def db_load_facts() -> list[dict]:
+    conn = _get_db()
+    rows = conn.execute("SELECT data FROM facts_data").fetchall()
+    result = []
+    for r in rows:
+        try:
+            result.append(json.loads(r["data"]))
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return result
+
+
+def db_save_facts(facts: list[dict]):
+    """Replace the entire facts store (same semantics as save_json for facts)."""
+    conn = _get_db()
+    conn.execute("DELETE FROM facts_data")
+    for f in facts:
+        conn.execute(
+            "INSERT INTO facts_data (id, chunk_id, source_id, data) VALUES (?, ?, ?, ?)",
+            (f.get("id", ""), f.get("chunk_id"), f.get("source_id"), json.dumps(f, default=str)),
+        )
+    conn.commit()
 
 
 # ---------------------------------------------------------------------------
