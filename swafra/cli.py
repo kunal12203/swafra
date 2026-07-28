@@ -465,12 +465,14 @@ def configure_llm(args: list[str]):
             cfg = json.loads(config_file.read_text())
             provider = cfg.get("llm_provider", "not set")
             has_key = "yes" if cfg.get("llm_api_key") else "no"
-            base_url = cfg.get("llm_base_url", "default")
+            base_url = cfg.get("llm_base_url")
+            model = cfg.get("llm_model", "default")
             print()
             print("  \033[1;33m⚙ LLM Configuration\033[0m")
             print(f"     Provider:   {provider}")
             print(f"     Key set:    {has_key}")
-            if cfg.get("llm_base_url"):
+            print(f"     Model:      {model}")
+            if base_url:
                 print(f"     Base URL:   {base_url}")
             print()
         else:
@@ -479,8 +481,8 @@ def configure_llm(args: list[str]):
             print()
             print("  Configure with:")
             print("    swafra config --provider anthropic --key sk-ant-...")
-            print("    swafra config --provider openai --key sk-...")
-            print("    swafra config --provider openai-compatible --key KEY --url http://localhost:11434/v1")
+            print("    swafra config --provider openai --key sk-... --model gpt-4o-mini")
+            print("    swafra config --provider openai-compatible --key KEY --url http://localhost:11434/v1 --model llama3")
             print()
             print("  Or set environment variables:")
             print("    ANTHROPIC_API_KEY=sk-ant-...")
@@ -492,6 +494,7 @@ def configure_llm(args: list[str]):
     provider = None
     api_key = None
     base_url = None
+    model = None
 
     i = 0
     while i < len(args):
@@ -504,12 +507,16 @@ def configure_llm(args: list[str]):
         elif args[i] in ("--url", "-u") and i + 1 < len(args):
             base_url = args[i + 1]
             i += 2
+        elif args[i] in ("--model", "-m") and i + 1 < len(args):
+            model = args[i + 1]
+            i += 2
         elif args[i] == "--clear":
             if config_file.exists():
                 cfg = json.loads(config_file.read_text())
                 cfg.pop("llm_provider", None)
                 cfg.pop("llm_api_key", None)
                 cfg.pop("llm_base_url", None)
+                cfg.pop("llm_model", None)
                 config_file.write_text(json.dumps(cfg, indent=2))
             print("  \033[1;32m✓\033[0m LLM config cleared. Using regex fallback.")
             return
@@ -541,12 +548,17 @@ def configure_llm(args: list[str]):
         cfg["llm_base_url"] = base_url
     elif "llm_base_url" in cfg:
         del cfg["llm_base_url"]
+    if model:
+        cfg["llm_model"] = model
+    elif "llm_model" in cfg:
+        del cfg["llm_model"]
 
     config_file.write_text(json.dumps(cfg, indent=2))
 
     print()
     print("  \033[1;32m✓\033[0m LLM configured!")
     print(f"     Provider: {provider}")
+    print(f"     Model:    {model or 'default'}")
     if base_url:
         print(f"     Base URL: {base_url}")
     print()

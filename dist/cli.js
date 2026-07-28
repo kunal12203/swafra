@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync, statSync, existsSync, mkdirSync, chmodSync, unlinkSync, rmSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-const VERSION = "0.2.7";
+const VERSION = "0.2.8";
 const DATA_DIR = process.env.SCIMAP_DATA_DIR || join(homedir(), ".scimap");
 function loadJson(filename) {
     const path = join(DATA_DIR, filename);
@@ -84,6 +84,24 @@ function stats() {
         const title = c.source_title || "unknown";
         sourceChunks[title] = (sourceChunks[title] || 0) + 1;
     }
+    // LLM status
+    let llmMode = "regex (fallback)";
+    const configPath = join(DATA_DIR, "config.json");
+    if (existsSync(configPath)) {
+        try {
+            const cfg = JSON.parse(readFileSync(configPath, "utf-8"));
+            if (cfg.llm_provider && cfg.llm_api_key) {
+                llmMode = `${cfg.llm_provider} (active)`;
+            }
+        }
+        catch { }
+    }
+    else if (process.env.ANTHROPIC_API_KEY) {
+        llmMode = "anthropic (env var)";
+    }
+    else if (process.env.OPENAI_API_KEY) {
+        llmMode = "openai (env var)";
+    }
     // Print
     console.log();
     console.log("  \x1b[1;36m╭─────────────────────────────────────────╮\x1b[0m");
@@ -98,6 +116,7 @@ function stats() {
     console.log(`     Edges:            ${edges.length}`);
     console.log(`     Total tokens:     ${totalTokens.toLocaleString()}`);
     console.log(`     Storage:          ${formatSize(totalSize)}`);
+    console.log(`     Extraction:       ${llmMode}`);
     console.log(`     Data dir:         ${DATA_DIR}`);
     console.log();
     // Graph topology
@@ -392,6 +411,123 @@ Try \\\`python3.12\\\` or \\\`python3.11\\\` instead.
     console.log("  Note: Requires `pip install swafra` for the engine.");
     console.log();
 }
+function config(args) {
+    const configPath = join(DATA_DIR, "config.json");
+    mkdirSync(DATA_DIR, { recursive: true });
+    if (args.length === 0) {
+        if (existsSync(configPath)) {
+            try {
+                const cfg = JSON.parse(readFileSync(configPath, "utf-8"));
+                const provider = cfg.llm_provider || "not set";
+                const hasKey = cfg.llm_api_key ? "yes" : "no";
+                const model = cfg.llm_model || "default";
+                console.log();
+                console.log("  \x1b[1;33m⚙ LLM Configuration\x1b[0m");
+                console.log(`     Provider:   ${provider}`);
+                console.log(`     Key set:    ${hasKey}`);
+                console.log(`     Model:      ${model}`);
+                if (cfg.llm_base_url)
+                    console.log(`     Base URL:   ${cfg.llm_base_url}`);
+                console.log();
+            }
+            catch {
+                console.log("  Config file exists but is invalid.");
+            }
+        }
+        else {
+            console.log();
+            console.log("  No LLM configured. Using regex fallback for extraction.");
+            console.log();
+            console.log("  Configure with:");
+            console.log("    swafra config --provider anthropic --key sk-ant-...");
+            console.log("    swafra config --provider openai --key sk-... --model gpt-4o-mini");
+            console.log("    swafra config --provider openai-compatible --key KEY --url http://localhost:11434/v1 --model llama3");
+            console.log();
+            console.log("  Or set environment variables:");
+            console.log("    ANTHROPIC_API_KEY=sk-ant-...");
+            console.log("    OPENAI_API_KEY=sk-...");
+            console.log("    SWAFRA_LLM_API_KEY=... + SWAFRA_LLM_BASE_URL=...");
+            console.log();
+        }
+        return;
+    }
+    let provider = null;
+    let apiKey = null;
+    let baseUrl = null;
+    let model = null;
+    for (let i = 0; i < args.length; i++) {
+        if ((args[i] === "--provider" || args[i] === "-p") && args[i + 1]) {
+            provider = args[++i];
+        }
+        else if ((args[i] === "--key" || args[i] === "-k") && args[i + 1]) {
+            apiKey = args[++i];
+        }
+        else if ((args[i] === "--url" || args[i] === "-u") && args[i + 1]) {
+            baseUrl = args[++i];
+        }
+        else if ((args[i] === "--model" || args[i] === "-m") && args[i + 1]) {
+            model = args[++i];
+        }
+        else if (args[i] === "--clear") {
+            if (existsSync(configPath)) {
+                const cfg = JSON.parse(readFileSync(configPath, "utf-8"));
+                delete cfg.llm_provider;
+                delete cfg.llm_api_key;
+                delete cfg.llm_base_url;
+                delete cfg.llm_model;
+                writeFileSync(configPath, JSON.stringify(cfg, null, 2));
+            }
+            console.log("  \x1b[1;32m✓\x1b[0m LLM config cleared. Using regex fallback.");
+            return;
+        }
+        else {
+            console.log(`  Unknown option: ${args[i]}`);
+            return;
+        }
+    }
+    if (!provider || !apiKey) {
+        console.log("  Both --provider and --key are required.");
+        console.log("  Example: swafra config --provider anthropic --key sk-ant-...");
+        return;
+    }
+    if (!["anthropic", "openai", "openai-compatible"].includes(provider)) {
+        console.log(`  Unknown provider: ${provider}`);
+        console.log("  Supported: anthropic, openai, openai-compatible");
+        return;
+    }
+    let cfg = {};
+    if (existsSync(configPath)) {
+        try {
+            cfg = JSON.parse(readFileSync(configPath, "utf-8"));
+        }
+        catch { }
+    }
+    cfg.llm_provider = provider;
+    cfg.llm_api_key = apiKey;
+    if (baseUrl)
+        cfg.llm_base_url = baseUrl;
+    else
+        delete cfg.llm_base_url;
+    if (model)
+        cfg.llm_model = model;
+    else
+        delete cfg.llm_model;
+    writeFileSync(configPath, JSON.stringify(cfg, null, 2));
+    console.log();
+    console.log("  \x1b[1;32m✓\x1b[0m LLM configured!");
+    console.log(`     Provider: ${provider}`);
+    console.log(`     Model:    ${model || "default"}`);
+    if (baseUrl)
+        console.log(`     Base URL: ${baseUrl}`);
+    console.log();
+    console.log("  swafra will now use LLM for:");
+    console.log("    • Entity extraction (catches lowercase tech terms, tools, concepts)");
+    console.log("    • Semantic dedup (skips storing duplicate knowledge)");
+    console.log("    • Preference/topic detection");
+    console.log();
+    console.log("  Fallback: regex (when LLM call fails or times out)");
+    console.log();
+}
 function main() {
     const args = process.argv.slice(2);
     const cmd = args[0] || "stats";
@@ -410,6 +546,9 @@ function main() {
     else if (cmd === "skill") {
         installSkill();
     }
+    else if (cmd === "config") {
+        config(args.slice(1));
+    }
     else if (cmd === "remove") {
         remove(args[1] === "global");
     }
@@ -423,6 +562,7 @@ function main() {
         console.log("    swafra serve        Start the MCP server (for MCP clients)");
         console.log("    swafra setup        Install enforcement hooks for Claude Code");
         console.log("    swafra skill        Install as Claude Code skill (no MCP needed)");
+        console.log("    swafra config       Configure LLM for better extraction");
         console.log("    swafra remove       Disable hooks (keeps data)");
         console.log("    swafra remove global  Remove hooks + delete all stored data");
         console.log("    swafra help         Show this help");

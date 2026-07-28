@@ -46,12 +46,19 @@ def is_llm_available() -> bool:
     return provider is not None and key is not None
 
 
+def _get_model() -> str | None:
+    """Get configured model name, or None for default."""
+    cfg = _load_config()
+    return cfg.get("llm_model")
+
+
 def _call_anthropic(api_key: str, prompt: str, system: str) -> str | None:
     import urllib.request
     import urllib.error
 
+    model = _get_model() or "claude-haiku-4-5-20251001"
     body = json.dumps({
-        "model": "claude-haiku-4-5-20251001",
+        "model": model,
         "max_tokens": 1024,
         "system": system,
         "messages": [{"role": "user", "content": prompt}],
@@ -77,9 +84,10 @@ def _call_openai(api_key: str, base_url: str | None, prompt: str, system: str) -
     import urllib.request
     import urllib.error
 
+    model = _get_model() or "gpt-4o-mini"
     url = (base_url or "https://api.openai.com/v1").rstrip("/") + "/chat/completions"
     body = json.dumps({
-        "model": "gpt-4o-mini",
+        "model": model,
         "max_tokens": 1024,
         "messages": [
             {"role": "system", "content": system},
