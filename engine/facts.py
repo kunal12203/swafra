@@ -14,25 +14,17 @@ from __future__ import annotations
 import hashlib
 import re
 import time
-from pathlib import Path
 
 from engine.embedding import cosine_sim, embed
-from engine.storage import DATA_DIR, load_json, save_json, get_backend, db_load_facts, db_save_facts
-
-FACTS_FILE = DATA_DIR / "facts.json"
+from engine.store import get_store
 
 
 def _load_facts() -> list[dict]:
-    if get_backend() == "sqlite":
-        return db_load_facts()
-    return load_json(FACTS_FILE) or []
+    return get_store().load_facts()
 
 
 def _save_facts(facts: list[dict]):
-    if get_backend() == "sqlite":
-        db_save_facts(facts)
-    else:
-        save_json(FACTS_FILE, facts)
+    get_store().save_facts(facts)
 
 # ---------------------------------------------------------------------------
 # Fact schema

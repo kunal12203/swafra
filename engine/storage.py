@@ -104,6 +104,22 @@ def _get_db() -> sqlite3.Connection:
     return _conn
 
 
+def open_connection(db_path: Path | str) -> sqlite3.Connection:
+    """Open a standalone SQLite connection with the swafra schema and pragmas.
+
+    Used by instance-based stores (engine/store.py) that manage their own
+    database file — e.g. one file per cloud workspace. The module-global
+    connection (`_get_db`) remains the local single-user path.
+    """
+    conn = sqlite3.connect(str(db_path), timeout=10, check_same_thread=False)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA cache_size=-64000")
+    conn.row_factory = sqlite3.Row
+    _init_schema(conn)
+    return conn
+
+
 def _init_schema(conn: sqlite3.Connection):
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS chunks (
@@ -207,8 +223,9 @@ def _decode_json_field(text: str | None) -> list:
 # ---------------------------------------------------------------------------
 # SQLite CRUD operations
 # ---------------------------------------------------------------------------
-def db_load_chunks(source_id: str | None = None) -> list[dict]:
-    conn = _get_db()
+def db_load_chunks(source_id: str | None = None,
+                   conn: sqlite3.Connection | None = None) -> list[dict]:
+    conn = conn if conn is not None else _get_db()
     if source_id:
         rows = conn.execute("SELECT * FROM chunks WHERE source_id = ?", (source_id,)).fetchall()
     else:
@@ -216,14 +233,15 @@ def db_load_chunks(source_id: str | None = None) -> list[dict]:
     return [_row_to_chunk(r) for r in rows]
 
 
-def db_load_active_chunks() -> list[dict]:
-    conn = _get_db()
+def db_load_active_chunks(conn: sqlite3.Connection | None = None) -> list[dict]:
+    conn = conn if conn is not None else _get_db()
     rows = conn.execute("SELECT * FROM chunks WHERE superseded_by IS NULL").fetchall()
     return [_row_to_chunk(r) for r in rows]
 
 
-def db_save_chunks(chunks: list[dict], source_id: str):
-    conn = _get_db()
+def db_save_chunks(chunks: list[dict], source_id: str,
+                   conn: sqlite3.Connection | None = None):
+    conn = conn if conn is not None else _get_db()
     conn.execute("DELETE FROM chunks WHERE source_id = ?", (source_id,))
     for c in chunks:
         conn.execute("""
@@ -244,8 +262,9 @@ def db_save_chunks(chunks: list[dict], source_id: str):
     conn.commit()
 
 
-def db_load_edges(source_id: str | None = None) -> list[dict]:
-    conn = _get_db()
+def db_load_edges(source_id: str | None = None,
+                  conn: sqlite3.Connection | None = None) -> list[dict]:
+    conn = conn if conn is not None else _get_db()
     if source_id:
         rows = conn.execute("SELECT * FROM edges WHERE source_id = ?", (source_id,)).fetchall()
     else:
@@ -254,8 +273,9 @@ def db_load_edges(source_id: str | None = None) -> list[dict]:
              "type": r["type"], "weight": r["weight"]} for r in rows]
 
 
-def db_save_edges(edges: list[dict], source_id: str):
-    conn = _get_db()
+def db_save_edges(edges: list[dict], source_id: str,
+                  conn: sqlite3.Connection | None = None):
+    conn = conn if conn is not None else _get_db()
     conn.execute("DELETE FROM edges WHERE source_id = ?", (source_id,))
     for e in edges:
         conn.execute(
@@ -264,8 +284,8 @@ def db_save_edges(edges: list[dict], source_id: str):
     conn.commit()
 
 
-def db_add_edges(edges: list[dict]):
-    conn = _get_db()
+def db_add_edges(edges: list[dict], conn: sqlite3.Connection | None = None):
+    conn = conn if conn is not None else _get_db()
     for e in edges:
         conn.execute(
             "INSERT INTO edges (source_id, from_id, to_id, type, weight) VALUES (?, ?, ?, ?, ?)",
@@ -273,21 +293,23 @@ def db_add_edges(edges: list[dict]):
     conn.commit()
 
 
-def db_load_sources() -> list[dict]:
-    conn = _get_db()
+def db_load_sources(conn: sqlite3.Connection | None = None) -> list[dict]:
+    conn = conn if conn is not None else _get_db()
     rows = conn.execute("SELECT * FROM sources").fetchall()
     return [{"id": r["id"], "title": r["title"], "chunks": r["chunks"]} for r in rows]
 
 
-def db_save_source(source_id: str, title: str, chunk_count: int):
-    conn = _get_db()
+def db_save_source(source_id: str, title: str, chunk_count: int,
+                   conn: sqlite3.Connection | None = None):
+    conn = conn if conn is not None else _get_db()
     conn.execute("INSERT OR REPLACE INTO sources (id, title, chunks) VALUES (?, ?, ?)",
                  (source_id, title, chunk_count))
     conn.commit()
 
 
-def db_delete_source(source_id: str) -> int:
-    conn = _get_db()
+def db_delete_source(source_id: str,
+                     conn: sqlite3.Connection | None = None) -> int:
+    conn = conn if conn is not None else _get_db()
     count = conn.execute("SELECT COUNT(*) FROM chunks WHERE source_id = ?", (source_id,)).fetchone()[0]
     conn.execute("DELETE FROM chunks WHERE source_id = ?", (source_id,))
     conn.execute("DELETE FROM edges WHERE source_id = ?", (source_id,))
@@ -296,20 +318,21 @@ def db_delete_source(source_id: str) -> int:
     return count
 
 
-def db_supersede_chunk(chunk_id: str, superseded_by: str):
-    conn = _get_db()
+def db_supersede_chunk(chunk_id: str, superseded_by: str,
+                       conn: sqlite3.Connection | None = None):
+    conn = conn if conn is not None else _get_db()
     conn.execute("UPDATE chunks SET superseded_by = ? WHERE id = ?", (superseded_by, chunk_id))
     conn.commit()
 
 
-def db_chunk_count() -> int:
-    conn = _get_db()
+def db_chunk_count(conn: sqlite3.Connection | None = None) -> int:
+    conn = conn if conn is not None else _get_db()
     return conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
 
 
-def db_get_all_vectors() -> list[tuple[str, list[float]]]:
+def db_get_all_vectors(conn: sqlite3.Connection | None = None) -> list[tuple[str, list[float]]]:
     """Return (chunk_id, embedding) for all active chunks. Used for vector search."""
-    conn = _get_db()
+    conn = conn if conn is not None else _get_db()
     rows = conn.execute(
         "SELECT id, embedding FROM chunks WHERE superseded_by IS NULL AND embedding IS NOT NULL"
     ).fetchall()
@@ -408,8 +431,8 @@ def _migrate_json_to_sqlite():
 # SQLite facts CRUD (full-fidelity JSON blob per fact)
 # ---------------------------------------------------------------------------
 
-def db_load_facts() -> list[dict]:
-    conn = _get_db()
+def db_load_facts(conn: sqlite3.Connection | None = None) -> list[dict]:
+    conn = conn if conn is not None else _get_db()
     rows = conn.execute("SELECT data FROM facts_data").fetchall()
     result = []
     for r in rows:
@@ -420,9 +443,9 @@ def db_load_facts() -> list[dict]:
     return result
 
 
-def db_save_facts(facts: list[dict]):
+def db_save_facts(facts: list[dict], conn: sqlite3.Connection | None = None):
     """Replace the entire facts store (same semantics as save_json for facts)."""
-    conn = _get_db()
+    conn = conn if conn is not None else _get_db()
     conn.execute("DELETE FROM facts_data")
     for f in facts:
         conn.execute(

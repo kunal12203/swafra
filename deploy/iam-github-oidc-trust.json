@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::790791784202:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:repository_id": "1314140584"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": [
+            "repo:samartho4@142962370/swafra@1314140584:ref:refs/heads/production",
+            "repo:samartho4/swafra:ref:refs/heads/production"
+          ]
+        }
+      }
+    }
+  ]
+}
