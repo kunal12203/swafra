@@ -17,16 +17,7 @@ from engine.extractors import (
 )
 from engine.facts import get_chunk_fact_signals, ingest_facts
 from engine.llm import is_llm_available, llm_call, llm_check_duplicate
-from engine.storage import (
-    # JSON backend
-    CHUNKS_FILE, EDGES_FILE, SOURCES_FILE,
-    load_json, save_json,
-    # SQLite backend
-    get_backend,
-    db_load_active_chunks, db_load_chunks, db_load_edges, db_load_sources,
-    db_save_chunks, db_save_edges, db_add_edges,
-    db_save_source, db_delete_source, db_supersede_chunk,
-)
+from engine.store import get_store
 from engine.tokenizer import tokenize
 
 
@@ -35,89 +26,47 @@ def _gen_id(content: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Storage dispatch — routes to JSON or SQLite based on active backend
+# Storage dispatch — all persistence goes through the MemoryStore port
+# (engine/store.py). Locally that is the adaptive JSON→SQLite store; a cloud
+# edge binds a per-workspace store via engine.store.use_store().
 # ---------------------------------------------------------------------------
 
 def _load_all_chunks() -> list[dict]:
-    if get_backend() == "sqlite":
-        return db_load_active_chunks()
-    chunks = load_json(CHUNKS_FILE) or []
-    return [c for c in chunks if not c.get("superseded_by")]
+    return get_store().load_active_chunks()
 
 
 def _load_all_chunks_including_superseded() -> list[dict]:
-    if get_backend() == "sqlite":
-        return db_load_chunks()
-    return load_json(CHUNKS_FILE) or []
+    return get_store().load_all_chunks()
 
 
 def _load_all_edges() -> list[dict]:
-    if get_backend() == "sqlite":
-        return db_load_edges()
-    return load_json(EDGES_FILE) or []
+    return get_store().load_edges()
 
 
 def _load_all_sources() -> list[dict]:
-    if get_backend() == "sqlite":
-        return db_load_sources()
-    return load_json(SOURCES_FILE) or []
+    return get_store().load_sources()
 
 
-def _save_source_chunks(new_chunks: list[dict], source_id: str,
-                        all_chunks_json: list[dict] | None = None):
-    """Persist chunks for a source. all_chunks_json only needed for JSON backend."""
-    if get_backend() == "sqlite":
-        db_save_chunks(new_chunks, source_id)
-    else:
-        # Replace this source's chunks in the full store
-        other = [c for c in (all_chunks_json or []) if c.get("source_id") != source_id]
-        save_json(CHUNKS_FILE, other + new_chunks)
+def _save_source_chunks(new_chunks: list[dict], source_id: str):
+    """Persist chunks for a source (replaces the source's previous chunks)."""
+    get_store().save_source_chunks(new_chunks, source_id)
 
 
-def _save_source_edges(source_edges: list[dict], cross_edges: list[dict],
-                       source_id: str, all_edges_json: list[dict] | None = None):
+def _save_source_edges(source_edges: list[dict], cross_edges: list[dict], source_id: str):
     """Persist intra-source edges and cross-session edges."""
-    if get_backend() == "sqlite":
-        db_save_edges(source_edges, source_id)
-        if cross_edges:
-            db_add_edges(cross_edges)
-    else:
-        other = [e for e in (all_edges_json or []) if e.get("source_id") != source_id]
-        save_json(EDGES_FILE, other + source_edges + cross_edges)
+    get_store().save_source_edges(source_edges, cross_edges, source_id)
 
 
-def _save_source_record(source_id: str, title: str, chunk_count: int,
-                        all_sources_json: list[dict] | None = None):
-    if get_backend() == "sqlite":
-        db_save_source(source_id, title, chunk_count)
-    else:
-        others = [s for s in (all_sources_json or []) if s["id"] != source_id]
-        save_json(SOURCES_FILE, others + [{"id": source_id, "title": title, "chunks": chunk_count}])
+def _save_source_record(source_id: str, title: str, chunk_count: int):
+    get_store().save_source_record(source_id, title, chunk_count)
 
 
 def _delete_source_data(source_id: str) -> int:
-    if get_backend() == "sqlite":
-        return db_delete_source(source_id)
-    # JSON path
-    chunks = load_json(CHUNKS_FILE) or []
-    edges = load_json(EDGES_FILE) or []
-    sources = load_json(SOURCES_FILE) or []
-    before = len(chunks)
-    save_json(CHUNKS_FILE, [c for c in chunks if c.get("source_id") != source_id])
-    save_json(EDGES_FILE, [e for e in edges if e.get("source_id") != source_id])
-    save_json(SOURCES_FILE, [s for s in sources if s.get("id") != source_id])
-    return before - len([c for c in chunks if c.get("source_id") != source_id])
+    return get_store().delete_source(source_id)
 
 
-def _supersede_chunk_record(chunk_id: str, superseded_by: str,
-                             all_chunks_json: list[dict] | None = None):
-    if get_backend() == "sqlite":
-        db_supersede_chunk(chunk_id, superseded_by)
-    else:
-        for c in (all_chunks_json or []):
-            if c["id"] == chunk_id:
-                c["superseded_by"] = superseded_by
-                break
+def _supersede_chunk_record(chunk_id: str, superseded_by: str):
+    get_store().supersede_chunk(chunk_id, superseded_by)
 
 
 # ---------------------------------------------------------------------------
@@ -176,7 +125,6 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
     # Load all existing data upfront (needed for dedup, cross-session edges,
     # supersession checks, and JSON save-back).
     all_chunks = _load_all_chunks_including_superseded()
-    all_edges = _load_all_edges()
     all_sources = _load_all_sources()
 
     source_id = _gen_id(f"{source_title}:{text[:100]}")
@@ -320,13 +268,11 @@ def add_knowledge(text: str, source_title: str = "untitled") -> dict:
 
     # Persist — order matters: supersede old chunks first, then save new ones
     for old_cid, new_cid in superseded_old_ids:
-        _supersede_chunk_record(old_cid, new_cid, all_chunks)
+        _supersede_chunk_record(old_cid, new_cid)
 
-    # For JSON backend we need to pass the full store for save-back
-    full_chunks_for_json = [c for c in all_chunks if c.get("source_id") != source_id] + new_chunks
-    _save_source_chunks(new_chunks, source_id, full_chunks_for_json)
-    _save_source_edges(source_edges, cross_edges, source_id, all_edges)
-    _save_source_record(source_id, source_title, len(pieces), all_sources)
+    _save_source_chunks(new_chunks, source_id)
+    _save_source_edges(source_edges, cross_edges, source_id)
+    _save_source_record(source_id, source_title, len(pieces))
 
     return {
         "source_id": source_id,
