@@ -20,6 +20,25 @@ Set repository secret on **samartho4/swafra**:
 
 - `AWS_DEPLOY_ROLE_ARN` = ARN of IAM role `swafra-github-deploy` (OIDC)
 
+Trust + permissions live in:
+
+- `deploy/iam-github-oidc-trust.json`
+- `deploy/iam-github-oidc-policy.json`
+
+Apply:
+
+```bash
+aws iam update-assume-role-policy --role-name swafra-github-deploy \
+  --policy-document file://deploy/iam-github-oidc-trust.json
+aws iam put-role-policy --role-name swafra-github-deploy \
+  --policy-name swafra-lightsail-deploy \
+  --policy-document file://deploy/iam-github-oidc-policy.json
+```
+
+**OIDC note (2026):** this repo uses GitHub’s immutable `sub` claim
+(`repo:samartho4@142962370/swafra@1314140584:ref:refs/heads/production`).
+Classic `repo:owner/name:...` alone will fail `AssumeRoleWithWebIdentity`.
+
 ## Smoke
 
 ```bash
